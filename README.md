@@ -1,11 +1,36 @@
-# Skill Risk Manager
+## Overview
 
-Skill Risk Manager is a local desktop tool for discovering Claude Code skills, reviewing uncertain findings, and keeping stable results separate from staged candidates.
+![Skill Risk Manager hero banner](assets/futuristic_skill_risk_management_ui.png)
 
-The codebase is split into two top-level areas:
+**Skill Risk Manager** is a local desktop application for discovering, reviewing, and managing Claude Code skills on a user’s machine. It provides a structured workflow for scanning local Claude-related configuration, detecting skill-like files, separating stable results from uncertain candidates, and promoting reviewed findings into a committed snapshot.
 
-- `skill_manager/`: backend scanner, platform adapters, storage, and CLI logic.
-- `manager_GUI/`: CustomTkinter desktop UI with a reusable component system and backend controller bridge.
+The project is designed around a simple safety model: fast, high-confidence discovery produces a stable snapshot first, while lower-confidence or lower-priority findings continue through a reduced-budget shadow scan. This keeps trusted results available quickly while allowing deeper inspection to continue without blocking the interface.
+
+## What It Does
+
+Skill Risk Manager helps answer three practical questions:
+
+1. **What Claude Code skills exist on this machine?**  
+   The scanner searches Claude-related paths, skill folders, command files, configuration files, and other high-value locations.
+
+2. **Which findings are stable enough to trust immediately?**  
+   Foreground scan results are written into a committed Stage 1 snapshot.
+
+3. **Which findings need review before use?**  
+   Lower-confidence or deferred findings are staged into a shadow candidate pool for later inspection.
+
+## Core Workflow
+
+```text
+Scan local machine
+        ↓
+Build stable Stage 1 snapshot
+        ↓
+Continue reduced-budget shadow scan
+        ↓
+Stage uncertain candidates
+        ↓
+Review / promote / ignore candidates
 
 ## Requirements
 
