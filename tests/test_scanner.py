@@ -44,6 +44,19 @@ class ScannerTests(unittest.TestCase):
             self.assertEqual(repository.load_snapshot()[0].name, "Helper")
             self.assertEqual(shadow_records[0].name, "Shadow Helper")
 
+    def test_scan_service_adds_local_roots_for_full_computer_scan(self) -> None:
+        with writable_temp_dir() as root:
+            service = ScanService(
+                get_platform_adapter(),
+                Repository(root / "runtime"),
+                ScanConfig(min_checked_count=1, min_elapsed_seconds=0, required_source_groups=set()),
+                queue.Queue[ScanEvent](),
+            )
+
+            targets = service.build_computer_scan_targets("base")
+
+            self.assertTrue(any(target.source_type == "computer_root" for target in targets))
+
     def test_foreground_scan_saves_stable_snapshot_after_run(self) -> None:
         with writable_temp_dir() as root:
             repository = Repository(root / "runtime")

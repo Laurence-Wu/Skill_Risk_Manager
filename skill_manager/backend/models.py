@@ -95,6 +95,7 @@ class ScanConfig:
     shadow_sleep_seconds: float = 0.05
     shadow_max_runtime_seconds: float = 300.0
     shadow_max_candidates: int = 1000
+    respect_hard_ignores: bool = True
     required_source_groups: set[str] = field(
         default_factory=lambda: {"personal", "project", "parent", "plugin", "command"}
     )

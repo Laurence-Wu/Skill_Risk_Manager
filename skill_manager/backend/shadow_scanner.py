@@ -36,6 +36,7 @@ class ShadowScanner:
         self.candidates_found = 0
         self.confirmed_found = 0
         self.started_at = 0.0
+        self.visited_directories: set[str] = set()
 
     def run(self, targets: list[ScanTarget], cancel_token: CancelToken) -> list[SkillRecord]:
         self.started_at = time.time()
@@ -82,6 +83,8 @@ class ShadowScanner:
                 return
             directory_path, depth = stack.pop()
             if self._should_skip_path(directory_path):
+                continue
+            if not self._mark_directory_seen(directory_path):
                 continue
             try:
                 entries = list(directory_path.iterdir())
@@ -179,9 +182,24 @@ class ShadowScanner:
         if is_generated_or_test_path(path):
             return True
         try:
-            return self.adapter.is_hard_ignored(path)
+            if path.is_symlink():
+                return True
+        except OSError:
+            return True
+        try:
+            return self.config.respect_hard_ignores and self.adapter.is_hard_ignored(path)
         except OSError:
             return False
+
+    def _mark_directory_seen(self, path: Path) -> bool:
+        try:
+            directory_key = self.adapter.path_key(path)
+        except OSError:
+            return False
+        if directory_key in self.visited_directories:
+            return False
+        self.visited_directories.add(directory_key)
+        return True
 
     def _should_stop(self, cancel_token: CancelToken) -> bool:
         if cancel_token.cancelled:

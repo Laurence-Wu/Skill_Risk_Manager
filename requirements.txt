@@ -1,2 +1,1 @@
-# Runtime dependency for the real GUI and standalone mock UI.
-customtkinter>=5.2.2,<6
+customtkinter>=5.2.0

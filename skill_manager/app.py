@@ -3,7 +3,7 @@ from __future__ import annotations
 
 def main() -> None:
     try:
-        from skill_manager.ui.shell.main_window import MainWindow
+        from manager_GUI.app import main as run_gui
     except ModuleNotFoundError as error:
         if error.name == "customtkinter":
             raise SystemExit(
@@ -11,10 +11,8 @@ def main() -> None:
             ) from error
         raise
 
-    app = MainWindow()
-    app.mainloop()
+    run_gui()
 
 
 if __name__ == "__main__":
     main()
-

@@ -1,73 +1,79 @@
-# Claude Skill Manager
+# Skill Risk Manager
 
-Stage 1 discovers obvious Claude Code skills and Claude-related files quickly. It creates a stable foreground snapshot after fast exit, then can continue with a low-budget shadow scan that stages additional results separately.
+Skill Risk Manager is a local desktop tool for discovering Claude Code skills, reviewing uncertain findings, and keeping stable results separate from staged candidates.
+
+The codebase is split into two top-level areas:
+
+- `skill_manager/`: backend scanner, platform adapters, storage, and CLI logic.
+- `manager_GUI/`: CustomTkinter desktop UI with a reusable component system and backend controller bridge.
 
 ## Requirements
 
 - Python 3.11+
 - Windows, macOS, or Linux
-- `customtkinter` for the GUI
+- `customtkinter`
 
-Install runtime dependencies:
+Install dependencies:
 
 ```powershell
 python -m pip install -r requirements.txt
 ```
 
-## Run A Fast Search
+## Run The GUI
 
 From the project root:
 
 ```powershell
-python -m skill_manager scan --stage1
+python -m manager_GUI.app
 ```
 
-List the saved Stage 1 snapshot:
-
-```powershell
-python -m skill_manager list
-```
-
-Run foreground scan and shadow scan:
-
-```powershell
-python -m skill_manager scan --stage1 --shadow
-```
-
-Export the current report files:
-
-```powershell
-python -m skill_manager export-report .\report
-```
-
-## Run The GUI
+The existing package entry point also launches the GUI when no CLI arguments are passed:
 
 ```powershell
 python -m skill_manager
 ```
 
-The GUI uses the same backend as the CLI. During foreground scan it shows progress only; stable skills and candidates appear after fast exit.
+## Current Status
+
+The desktop app is connected to the Stage 1 scanner through `manager_GUI.core.BackendController`. It uses a worker thread and a thread-safe event queue so scan activity does not mutate Tk widgets from the scanner thread.
+
+The UI has one user-facing Scan area. Primary scan activity uses the indigo progress bar, and reduced-budget continuation uses the amber progress bar. Stable skills appear only after a snapshot is committed; additional uncertain findings are staged in Candidates.
+
+By default, Start Scan scans the local computer. The Scan and Config screens expose a security level:
+
+- Base: scan accessible files and skip protected hard-ignore paths.
+- Advanced: attempt protected paths as well; permission failures are logged as warnings.
+
+## UI Structure
+
+- `manager_GUI/core/`: event model, app state, backend controller, and mock controller for isolated UI tests.
+- `manager_GUI/ui/theme.py`: centralized colors, spacing, typography, and component state styles.
+- `manager_GUI/ui/components.py`: base cards, buttons, badges, progress cards, tables, logs, and view base class.
+- `manager_GUI/ui/views/`: Dashboard, Scan, Skills, Candidates, Config, and Logs.
+- `manager_GUI/ui/shell.py`: top bar, sidebar, routing, and queue polling.
+
+## Backend CLI
+
+The backend scanner CLI remains available:
+
+```powershell
+python -m skill_manager scan --stage1
+python -m skill_manager list
+python -m skill_manager export-report .\report
+```
 
 ## Output Files
 
-- `skill_manager/data/stage1_snapshot.json` — stable foreground results saved after fast exit.
-- `skill_manager/data/stage1_shadow_pool.json` — staged shadow scan results.
-- `skill_manager/data/stage1_summary.json` — foreground and shadow summary.
-- `skill_manager/data/scan_cache.json` — file stat/hash classification cache.
-- `skill_manager/logs/stage1_scan_log.csv` — scan lifecycle events.
-- `skill_manager/logs/stage1_error_log.csv` — permission and filesystem errors.
-
-Permission errors for Windows junction folders such as `My Pictures`, `My Music`, or `My Videos` are expected skips, not scan failures.
+- `skill_manager/data/stage1_snapshot.json`: committed scan results.
+- `skill_manager/data/stage1_shadow_pool.json`: staged continuation results.
+- `skill_manager/data/stage1_summary.json`: scan summary.
+- `skill_manager/data/scan_cache.json`: file stat/hash classification cache.
+- `skill_manager/logs/stage1_scan_log.csv`: scan lifecycle events.
+- `skill_manager/logs/stage1_error_log.csv`: permission and filesystem warnings.
 
 ## Platform Config
 
-Platform-specific behavior is isolated behind adapters in `skill_manager/platform/`. Rich JSON profiles live in:
-
-- `skill_manager/config/platforms/windows.json`
-- `skill_manager/config/platforms/macos.json`
-- `skill_manager/config/platforms/linux.json`
-
-The loader supports the richer schema keys such as `personal_scope_paths`, `project_scope_paths`, `plugin_scope_paths`, `managed_scope_paths`, and `developer_root_candidates`, then normalizes them into Stage 1 scan targets.
+Platform-specific behavior is isolated behind adapters in `skill_manager/platform/`. Rich JSON profiles live in `skill_manager/config/platforms/`.
 
 Override the Claude config root with:
 
@@ -79,11 +85,18 @@ python -m skill_manager scan --stage1
 ## Tests
 
 ```powershell
-python -m unittest discover -v
+python -B -m unittest discover -v
 ```
 
 Optional syntax check:
 
 ```powershell
-python -m compileall skill_manager tests
+python -B -m compileall -q manager_GUI skill_manager tests
 ```
+
+## Future Work
+
+- Add richer JSON/CSV repository editing workflows for committed snapshots and staged candidates.
+- Wire Config view controls to platform and rule files.
+- Add platform adapter status/details to the UI.
+- Package the desktop app for local installation.

@@ -59,6 +59,7 @@ class Stage1Scanner:
         self.files_checked = 0
         self.directories_checked = 0
         self.errors = 0
+        self.visited_directories: set[str] = set()
 
     def run_foreground(
         self,
@@ -83,6 +84,11 @@ class Stage1Scanner:
             if cancel_token and cancel_token.cancelled:
                 self._emit("foreground_cancelled", "Foreground fast scan cancelled")
                 return None
+            if cancel_token:
+                cancel_token.wait_if_paused()
+                if cancel_token.cancelled:
+                    self._emit("foreground_cancelled", "Foreground fast scan cancelled")
+                    return None
 
             target = target_queue.pop()
             fast_exit.mark_required_attempted(source_group_for_target(target.source_type))
@@ -180,8 +186,14 @@ class Stage1Scanner:
         while stack:
             if cancel_token and cancel_token.cancelled:
                 return
+            if cancel_token:
+                cancel_token.wait_if_paused()
+                if cancel_token.cancelled:
+                    return
             directory_path, depth = stack.pop()
             if self._should_skip_path(directory_path):
+                continue
+            if not self._mark_directory_seen(directory_path):
                 continue
             try:
                 entries = list(directory_path.iterdir())
@@ -198,6 +210,10 @@ class Stage1Scanner:
             for entry in entries:
                 if cancel_token and cancel_token.cancelled:
                     return
+                if cancel_token:
+                    cancel_token.wait_if_paused()
+                    if cancel_token.cancelled:
+                        return
                 if entry.is_dir():
                     if depth >= target.max_depth or self._should_skip_path(entry):
                         continue
@@ -218,8 +234,14 @@ class Stage1Scanner:
         while stack:
             if cancel_token and cancel_token.cancelled:
                 return
+            if cancel_token:
+                cancel_token.wait_if_paused()
+                if cancel_token.cancelled:
+                    return
             directory_path, depth = stack.pop()
             if self._should_skip_path(directory_path):
+                continue
+            if not self._mark_directory_seen(directory_path):
                 continue
             try:
                 entries = list(directory_path.iterdir())
@@ -236,6 +258,10 @@ class Stage1Scanner:
             for entry in entries:
                 if cancel_token and cancel_token.cancelled:
                     return
+                if cancel_token:
+                    cancel_token.wait_if_paused()
+                    if cancel_token.cancelled:
+                        return
                 if entry.is_dir():
                     if depth >= target.max_depth or self._should_skip_path(entry):
                         continue
@@ -392,9 +418,24 @@ class Stage1Scanner:
         if is_generated_or_test_path(path):
             return True
         try:
-            return self.adapter.is_hard_ignored(path)
+            if path.is_symlink():
+                return True
+        except OSError:
+            return True
+        try:
+            return self.config.respect_hard_ignores and self.adapter.is_hard_ignored(path)
         except OSError:
             return False
+
+    def _mark_directory_seen(self, path: Path) -> bool:
+        try:
+            directory_key = self.adapter.path_key(path)
+        except OSError:
+            return False
+        if directory_key in self.visited_directories:
+            return False
+        self.visited_directories.add(directory_key)
+        return True
 
     def _progress_payload(self, current_path: Path, current_phase: str) -> dict:
         return {
