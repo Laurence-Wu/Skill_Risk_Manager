@@ -3,7 +3,8 @@
 import customtkinter as ctk
 
 from manager_GUI.core.state import AppState
-from manager_GUI.ui.components import BaseButton, BaseView, LogPanel
+from manager_GUI.ui.components import BaseButton, BaseView
+from manager_GUI.ui.tables import LogPanel
 
 
 class LogsView(BaseView):

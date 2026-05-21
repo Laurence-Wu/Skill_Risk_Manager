@@ -3,7 +3,8 @@ from __future__ import annotations
 import customtkinter as ctk
 
 from manager_GUI.core.state import AppState
-from manager_GUI.ui.components import BaseButton, BaseTable, BaseView
+from manager_GUI.ui.components import BaseButton, BaseView
+from manager_GUI.ui.tables import BaseTable
 
 
 class CandidatesView(BaseView):
@@ -28,7 +29,7 @@ class CandidatesView(BaseView):
         self._state = state
         records = {
             "snapshot": state.candidates_snapshot,
-            "staged": state.candidates_staged,
+            "staged": list(reversed(state.candidates_staged)),
             "ignored": state.ignored_candidates,
         }[self.selected_bucket]
         actions = [("Open Folder", self._open_folder, "secondary")]
@@ -38,7 +39,7 @@ class CandidatesView(BaseView):
                 ("Ignore", self._ignore, "secondary"),
                 ("Open Folder", self._open_folder, "secondary"),
             ]
-        self.table.set_rows([record.to_row() for record in records], actions)
+        self.table.set_rows([record.to_row() for record in records], actions, page_size=80)
 
     def _select_bucket(self, bucket: str) -> None:
         self.selected_bucket = bucket

@@ -37,9 +37,11 @@ class ShadowScanner:
         self.confirmed_found = 0
         self.started_at = 0.0
         self.visited_directories: set[str] = set()
+        self.pending_shadow_saves = 0
 
     def run(self, targets: list[ScanTarget], cancel_token: CancelToken) -> list[SkillRecord]:
         self.started_at = time.time()
+        self.pending_shadow_saves = 0
         self._emit("shadow_started", "Shadow scan started")
         cache = self.repository.load_cache()
         shadow_records = self.repository.load_shadow_pool()
@@ -158,7 +160,7 @@ class ShadowScanner:
                 )
                 shadow_records.append(record)
                 self._mark_found(record)
-                self.repository.save_shadow_pool(self._deduplicate_records(shadow_records))
+                self._save_shadow_pool_lazily(shadow_records)
                 self._emit("shadow_candidate_found", "Shadow result staged", record.to_dict())
             cache[key] = build_cache_record(path, computed_hash, record)
         except OSError as error:
@@ -174,6 +176,13 @@ class ShadowScanner:
 
     def _deduplicate_records(self, records: list[SkillRecord]) -> list[SkillRecord]:
         return deduplicate_records(records, self.adapter)
+
+    def _save_shadow_pool_lazily(self, records: list[SkillRecord]) -> None:
+        self.pending_shadow_saves += 1
+        if self.pending_shadow_saves < self.config.shadow_batch_size:
+            return
+        self.repository.save_shadow_pool(self._deduplicate_records(records))
+        self.pending_shadow_saves = 0
 
     def _is_shadow_candidate(self, path: Path) -> bool:
         return is_scan_candidate_path(path)

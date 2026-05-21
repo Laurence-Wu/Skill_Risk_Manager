@@ -27,11 +27,7 @@ From the project root:
 python -m manager_GUI.app
 ```
 
-The existing package entry point also launches the GUI when no CLI arguments are passed:
-
-```powershell
-python -m skill_manager
-```
+This is the only GUI entry point. The `skill_manager` package stays backend/CLI-only.
 
 ## Current Status
 
@@ -44,11 +40,16 @@ By default, Start Scan scans the local computer. The Scan and Config screens exp
 - Base: scan accessible files and skip protected hard-ignore paths.
 - Advanced: attempt protected paths as well; permission failures are logged as warnings.
 
+Progress, file totals, skill counts, command counts, and candidates are global for the scan run rather than tied to a single folder. The progress bar uses a live estimated total and never moves backward during a scan.
+
+During reduced-budget continuation, candidate and log updates are lazy-loaded and batched so the UI remains responsive while new findings are staged.
+
 ## UI Structure
 
-- `manager_GUI/core/`: event model, app state, backend controller, and mock controller for isolated UI tests.
+- `manager_GUI/core/`: event model, app state, backend controller, progress math, record mapping, and mock controller for isolated UI tests.
 - `manager_GUI/ui/theme.py`: centralized colors, spacing, typography, and component state styles.
-- `manager_GUI/ui/components.py`: base cards, buttons, badges, progress cards, tables, logs, and view base class.
+- `manager_GUI/ui/components.py`: base cards, buttons, badges, progress cards, and view base class.
+- `manager_GUI/ui/tables.py`: lazy tables and log panels.
 - `manager_GUI/ui/views/`: Dashboard, Scan, Skills, Candidates, Config, and Logs.
 - `manager_GUI/ui/shell.py`: top bar, sidebar, routing, and queue polling.
 

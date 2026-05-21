@@ -3,7 +3,8 @@
 import customtkinter as ctk
 
 from manager_GUI.core.state import AppState
-from manager_GUI.ui.components import BaseButton, BaseView, LogPanel, MetricCard, ProgressCard
+from manager_GUI.ui.components import BaseButton, BaseView, MetricCard, ProgressCard
+from manager_GUI.ui.tables import LogPanel
 
 
 class ScanView(BaseView):
@@ -38,6 +39,7 @@ class ScanView(BaseView):
             state.progress,
             state.progress_mode,
             files_checked=state.files_checked,
+            expected_total_files=state.expected_total_files,
             directories_checked=state.directories_checked,
             potential_items=state.potential_items,
         )

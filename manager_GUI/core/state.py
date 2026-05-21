@@ -33,6 +33,7 @@ class AppState:
     current_activity: str = "Ready"
     current_path: str = ""
     files_checked: int = 0
+    expected_total_files: int = 0
     directories_checked: int = 0
     potential_items: int = 0
     confirmed_skills: list[SkillRecord] = field(default_factory=list)
@@ -75,22 +76,29 @@ class AppState:
             return
 
         if event.type in {SCAN_PROGRESS, CONTINUATION_PROGRESS}:
+            expected_total_files = int(event.payload.get("expected_total_files", 0) or 0)
             self.scan_status = "scanning"
-            self.progress = event.progress
+            self.progress = max(self.progress, event.progress)
             self.progress_mode = event.payload.get("progress_mode", self.progress_mode)
             self.current_activity = event.message or "Current activity"
             self.current_path = event.current_path
-            self.files_checked = event.files_checked
-            self.directories_checked = event.directories_checked
-            self.potential_items = event.potential_items
+            self.files_checked = max(self.files_checked, event.files_checked)
+            self.expected_total_files = max(self.expected_total_files, expected_total_files, self.files_checked)
+            self.directories_checked = max(self.directories_checked, event.directories_checked)
+            self.potential_items = max(self.potential_items, event.potential_items)
             return
 
         if event.type == SNAPSHOT_COMMITTED:
+            expected_total_files = int(event.payload.get("expected_total_files", 0) or 0)
             self.scan_status = "committed"
-            self.progress = event.progress or 1.0
+            self.progress = max(self.progress, event.progress or 0.72)
             self.progress_mode = "primary"
             self.lazy_updates_enabled = False
             self.current_activity = "Stable snapshot saved"
+            self.files_checked = max(self.files_checked, event.files_checked)
+            self.expected_total_files = max(self.expected_total_files, expected_total_files, self.files_checked)
+            self.directories_checked = max(self.directories_checked, event.directories_checked)
+            self.potential_items = max(self.potential_items, event.potential_items)
             self.confirmed_skills = list(event.payload.get("confirmed_skills", []))
             self.commands = list(event.payload.get("commands", []))
             self.config_files = list(event.payload.get("config_files", []))
@@ -99,11 +107,16 @@ class AppState:
             return
 
         if event.type == CONTINUATION_STARTED:
+            expected_total_files = int(event.payload.get("expected_total_files", 0) or 0)
             self.scan_status = "scanning"
-            self.progress = event.progress
+            self.progress = max(self.progress, event.progress)
             self.progress_mode = "continuation"
             self.lazy_updates_enabled = True
             self.current_activity = "Continuing at reduced budget"
+            self.files_checked = max(self.files_checked, event.files_checked)
+            self.expected_total_files = max(self.expected_total_files, expected_total_files, self.files_checked)
+            self.directories_checked = max(self.directories_checked, event.directories_checked)
+            self.potential_items = max(self.potential_items, event.potential_items)
             return
 
         if event.type == CANDIDATE_STAGED:
@@ -151,6 +164,7 @@ class AppState:
         self.progress_mode = "primary"
         self.current_path = ""
         self.files_checked = 0
+        self.expected_total_files = 0
         self.directories_checked = 0
         self.potential_items = 0
         self.confirmed_skills = []

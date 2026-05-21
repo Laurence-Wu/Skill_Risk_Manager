@@ -23,8 +23,23 @@ from manager_GUI.core.events import (
     SNAPSHOT_COMMITTED,
     ScanEvent,
 )
+from manager_GUI.core.progress import (
+    CONTINUATION_PROGRESS_RANGE,
+    SNAPSHOT_PROGRESS,
+    continuation_scan_progress,
+    expected_total_files,
+    primary_scan_progress,
+    snapshot_expected_total,
+)
+from manager_GUI.core.record_mapping import (
+    candidate_from_backend_payload,
+    candidate_records,
+    command_records,
+    config_records,
+    confirmed_skill_records,
+)
 from manager_GUI.core.state import AppState
-from manager_GUI.models import CandidateRecord, SkillRecord
+from manager_GUI.models import CandidateRecord
 from skill_manager.backend import ScanService
 from skill_manager.backend.models import CancelToken, ScanConfig, ScanEvent as BackendScanEvent
 from skill_manager.platform import get_platform_adapter
@@ -59,6 +74,9 @@ class BackendController:
         self._fast_cancel_token = CancelToken()
         self._continuation_cancel_token = CancelToken()
         self._open_folder_callback = open_folder_callback or self.adapter.open_folder
+        self._primary_files_checked = 0
+        self._primary_directories_checked = 0
+        self._primary_potential_items = 0
         self._load_existing_repository_state()
 
     def start_scan(self, scope: Path | None = None) -> bool:
@@ -67,6 +85,9 @@ class BackendController:
             return False
         self._fast_cancel_token = CancelToken()
         self._continuation_cancel_token = CancelToken()
+        self._primary_files_checked = 0
+        self._primary_directories_checked = 0
+        self._primary_potential_items = 0
         self._worker = threading.Thread(target=self._run_scan, args=(scope,), daemon=True)
         self._worker.start()
         return True
@@ -159,16 +180,36 @@ class BackendController:
             return
         self._state.add_log("success", f"Opened logs folder: {self.repository.logs_dir}")
 
-    def poll_events(self) -> list[ScanEvent]:
-        self._drain_backend_events()
+    def poll_events(
+        self,
+        *,
+        max_backend_events: int | None = None,
+        max_ui_events: int | None = None,
+    ) -> list[ScanEvent]:
+        self._drain_backend_events(max_backend_events)
         events: list[ScanEvent] = []
+        pending_progress: ScanEvent | None = None
+        processed = 0
         while True:
+            if max_ui_events is not None and processed >= max_ui_events:
+                break
             try:
                 event = self._events.get_nowait()
             except queue.Empty:
                 break
+            processed += 1
+            if event.type in {SCAN_PROGRESS, CONTINUATION_PROGRESS}:
+                pending_progress = event
+                continue
+            if pending_progress:
+                self._state.apply_event(pending_progress)
+                events.append(pending_progress)
+                pending_progress = None
             self._state.apply_event(event)
             events.append(event)
+        if pending_progress:
+            self._state.apply_event(pending_progress)
+            events.append(pending_progress)
         return events
 
     def get_state(self) -> AppState:
@@ -208,13 +249,26 @@ class BackendController:
         except Exception as error:
             self._emit(SCAN_ERROR, f"Scan failed: {error}")
 
-    def _drain_backend_events(self) -> None:
+    def _drain_backend_events(self, max_events: int | None = None) -> None:
+        pending_progress: BackendScanEvent | None = None
+        processed = 0
         while True:
+            if max_events is not None and processed >= max_events:
+                break
             try:
                 event = self._backend_events.get_nowait()
             except queue.Empty:
                 break
+            processed += 1
+            if event.event_type in {"foreground_progress", "shadow_progress"}:
+                pending_progress = event
+                continue
+            if pending_progress:
+                self._convert_backend_event(pending_progress)
+                pending_progress = None
             self._convert_backend_event(event)
+        if pending_progress:
+            self._convert_backend_event(pending_progress)
 
     def _convert_backend_event(self, event: BackendScanEvent) -> None:
         event_type = event.event_type
@@ -223,29 +277,48 @@ class BackendController:
             self._emit(SCAN_PROGRESS, "Current activity", progress=0.02, payload={"progress_mode": "primary"})
             return
         if event_type == "foreground_progress":
+            files_checked = int(payload.get("files_checked", 0))
+            directories_checked = int(payload.get("directories_checked", 0))
+            potential_items = int(payload.get("potential_found", 0))
+            overall_progress, phase_progress = primary_scan_progress(payload)
+            self._primary_files_checked = max(self._primary_files_checked, files_checked)
+            self._primary_directories_checked = max(self._primary_directories_checked, directories_checked)
+            self._primary_potential_items = max(self._primary_potential_items, potential_items)
             self._emit(
                 SCAN_PROGRESS,
                 str(payload.get("current_phase") or "Current activity"),
-                progress=_estimated_progress(payload, 0.9),
+                progress=overall_progress,
                 current_path=str(payload.get("formatted_path") or payload.get("current_path") or ""),
-                files_checked=int(payload.get("files_checked", 0)),
-                directories_checked=int(payload.get("directories_checked", 0)),
-                potential_items=int(payload.get("potential_found", 0)),
-                payload={"progress_mode": "primary"},
+                files_checked=files_checked,
+                directories_checked=directories_checked,
+                potential_items=potential_items,
+                payload={
+                    "progress_mode": "primary",
+                    "expected_total_files": expected_total_files(files_checked, phase_progress),
+                },
             )
             return
         if event_type == "snapshot_saved":
             snapshot = self.repository.load_snapshot()
+            self._primary_files_checked = max(self._primary_files_checked, int(payload.get("files_checked", 0)))
+            self._primary_directories_checked = max(
+                self._primary_directories_checked,
+                int(payload.get("directories_checked", 0)),
+            )
             self._emit(
                 SNAPSHOT_COMMITTED,
                 "Stable snapshot saved",
-                progress=1.0,
+                progress=SNAPSHOT_PROGRESS,
+                files_checked=self._primary_files_checked,
+                directories_checked=self._primary_directories_checked,
+                potential_items=self._primary_potential_items,
                 payload={
-                    "confirmed_skills": _confirmed_skill_records(snapshot),
-                    "commands": _records_by_type(snapshot, {"legacy_command"}),
-                    "config_files": _records_by_type(snapshot, {"claude_config", "managed_config"}),
-                    "candidates_snapshot": _candidate_records(snapshot, "snapshot"),
+                    "confirmed_skills": confirmed_skill_records(snapshot),
+                    "commands": command_records(snapshot),
+                    "config_files": config_records(snapshot),
+                    "candidates_snapshot": candidate_records(snapshot, "snapshot"),
                     "progress_mode": "primary",
+                    "expected_total_files": snapshot_expected_total(self._primary_files_checked),
                 },
             )
             return
@@ -253,24 +326,43 @@ class BackendController:
             self._emit(
                 CONTINUATION_STARTED,
                 "Continuing at reduced budget",
-                progress=0.0,
-                payload={"progress_mode": "continuation"},
+                progress=SNAPSHOT_PROGRESS,
+                files_checked=self._primary_files_checked,
+                directories_checked=self._primary_directories_checked,
+                potential_items=self._primary_potential_items,
+                payload={
+                    "progress_mode": "continuation",
+                    "expected_total_files": snapshot_expected_total(self._primary_files_checked),
+                },
             )
             return
         if event_type == "shadow_progress":
+            continuation_files = int(payload.get("files_checked", 0))
+            continuation_directories = int(payload.get("directories_checked", 0))
+            continuation_potential = int(payload.get("candidates_found", 0)) + int(payload.get("confirmed_found", 0))
+            global_files = self._primary_files_checked + continuation_files
+            global_directories = self._primary_directories_checked + continuation_directories
+            global_potential = self._primary_potential_items + continuation_potential
+            overall_progress, phase_progress = continuation_scan_progress(payload)
             self._emit(
                 CONTINUATION_PROGRESS,
                 "Additional findings are being staged",
-                progress=_estimated_progress(payload, 0.95),
+                progress=overall_progress,
                 current_path=str(payload.get("formatted_path") or payload.get("current_path") or ""),
-                files_checked=int(payload.get("files_checked", 0)),
-                directories_checked=int(payload.get("directories_checked", 0)),
-                potential_items=int(payload.get("candidates_found", 0)) + int(payload.get("confirmed_found", 0)),
-                payload={"progress_mode": "continuation"},
+                files_checked=global_files,
+                directories_checked=global_directories,
+                potential_items=global_potential,
+                payload={
+                    "progress_mode": "continuation",
+                    "expected_total_files": expected_total_files(
+                        global_files,
+                        SNAPSHOT_PROGRESS + phase_progress * CONTINUATION_PROGRESS_RANGE,
+                    ),
+                },
             )
             return
         if event_type == "shadow_candidate_found":
-            record = _candidate_from_backend_payload(payload, "continuation")
+            record = candidate_from_backend_payload(payload, "continuation")
             if record:
                 self._emit(
                     CANDIDATE_STAGED,
@@ -325,81 +417,11 @@ class BackendController:
 
     def _load_existing_repository_state(self) -> None:
         snapshot = self.repository.load_snapshot()
-        self._state.confirmed_skills = _confirmed_skill_records(snapshot)
-        self._state.commands = _records_by_type(snapshot, {"legacy_command"})
-        self._state.config_files = _records_by_type(snapshot, {"claude_config", "managed_config"})
-        self._state.candidates_snapshot = _candidate_records(snapshot, "snapshot")
+        self._state.confirmed_skills = confirmed_skill_records(snapshot)
+        self._state.commands = command_records(snapshot)
+        self._state.config_files = config_records(snapshot)
+        self._state.candidates_snapshot = candidate_records(snapshot, "snapshot")
         self._load_shadow_pool_into_state()
 
     def _load_shadow_pool_into_state(self) -> None:
-        self._state.candidates_staged = _candidate_records(self.repository.load_shadow_pool(), "continuation")
-
-
-def _estimated_progress(payload: dict, cap: float) -> float:
-    files_checked = int(payload.get("files_checked", 0))
-    directories_checked = int(payload.get("directories_checked", 0))
-    estimate = (files_checked + directories_checked) / 500
-    return max(0.02, min(cap, estimate))
-
-
-def _confirmed_skill_records(records: list) -> list[SkillRecord]:
-    return [
-        _skill_from_backend_record(record)
-        for record in records
-        if getattr(record, "record_type", "") in {"personal_skill", "project_skill", "plugin_skill"}
-    ]
-
-
-def _records_by_type(records: list, record_types: set[str]) -> list[SkillRecord]:
-    return [
-        _skill_from_backend_record(record)
-        for record in records
-        if getattr(record, "record_type", "") in record_types
-    ]
-
-
-def _candidate_records(records: list, source: str) -> list[CandidateRecord]:
-    return [
-        _candidate_from_backend_record(record, source)
-        for record in records
-        if getattr(record, "record_type", "") == "candidate"
-    ]
-
-
-def _skill_from_backend_record(record) -> SkillRecord:
-    metadata = getattr(record, "metadata", {}) or {}
-    return SkillRecord(
-        name=record.name,
-        scope=record.scope,
-        record_type=record.record_type,
-        path=str(record.path),
-        confidence=record.confidence,
-        status=record.status,
-        description=str(metadata.get("description") or metadata.get("summary") or ""),
-    )
-
-
-def _candidate_from_backend_record(record, source: str) -> CandidateRecord:
-    metadata = getattr(record, "metadata", {}) or {}
-    return CandidateRecord(
-        path=str(record.path),
-        reason=str(metadata.get("classification_reason") or record.record_type),
-        confidence=record.confidence,
-        source=source,
-        suggested_type=record.record_type,
-        status="staged" if source == "continuation" else "warning",
-    )
-
-
-def _candidate_from_backend_payload(payload: dict, source: str) -> CandidateRecord | None:
-    if not payload:
-        return None
-    metadata = payload.get("metadata", {}) if isinstance(payload.get("metadata", {}), dict) else {}
-    return CandidateRecord(
-        path=str(payload.get("path", "")),
-        reason=str(metadata.get("classification_reason") or payload.get("record_type") or "candidate"),
-        confidence=float(payload.get("confidence", 0)),
-        source=source,
-        suggested_type=str(payload.get("record_type", "candidate")),
-        status="staged",
-    )
+        self._state.candidates_staged = candidate_records(self.repository.load_shadow_pool(), "continuation")

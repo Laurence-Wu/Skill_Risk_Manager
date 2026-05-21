@@ -29,6 +29,7 @@ class DashboardView(BaseView):
             state.progress,
             state.progress_mode,
             files_checked=state.files_checked,
+            expected_total_files=state.expected_total_files,
             directories_checked=state.directories_checked,
             potential_items=state.potential_items,
         )
@@ -62,4 +63,3 @@ class DashboardView(BaseView):
         import customtkinter as ctk
 
         return ctk.CTkFrame(self, fg_color="transparent")
-

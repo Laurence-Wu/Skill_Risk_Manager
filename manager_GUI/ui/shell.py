@@ -16,6 +16,22 @@ from manager_GUI.ui.views.scan import ScanView
 from manager_GUI.ui.views.skills import SkillsView
 
 
+POLL_INTERVAL_MS = 50
+REFRESH_INTERVAL_SECONDS = 0.16
+MAX_BACKEND_EVENTS_PER_TICK = 240
+MAX_UI_EVENTS_PER_TICK = 160
+IMMEDIATE_REFRESH_EVENTS = {
+    "scan_started",
+    "snapshot_committed",
+    "continuation_started",
+    "scan_paused",
+    "scan_resumed",
+    "scan_cancelled",
+    "scan_completed",
+    "scan_error",
+}
+
+
 class MainWindow(ctk.CTk):
     def __init__(self) -> None:
         super().__init__()
@@ -23,6 +39,8 @@ class MainWindow(ctk.CTk):
         self.controller = BackendController()
         self.views: dict[str, ctk.CTkFrame] = {}
         self.active_view_key = "dashboard"
+        self._last_refresh_at = 0.0
+        self._refresh_pending = False
 
         self.title("Skill Risk Manager")
         self.geometry("1280x800")
@@ -36,7 +54,7 @@ class MainWindow(ctk.CTk):
         self._build_content()
         self._build_views()
         self.show_view("dashboard")
-        self.after(100, self._poll_controller)
+        self.after(POLL_INTERVAL_MS, self._poll_controller)
 
     def show_view(self, key: str) -> None:
         if key not in self.views:
@@ -140,23 +158,35 @@ class MainWindow(ctk.CTk):
             ).grid(row=0, column=1, sticky="ew", padx=(0, 10), pady=3)
 
     def _poll_controller(self) -> None:
-        events = self.controller.poll_events()
-        state = self.controller.get_state()
+        import time
+
+        events = self.controller.poll_events(
+            max_backend_events=MAX_BACKEND_EVENTS_PER_TICK,
+            max_ui_events=MAX_UI_EVENTS_PER_TICK,
+        )
         if events:
-            self._refresh_chrome(state)
-            for view in self.views.values():
-                view.refresh(state)
-        self.after(100, self._poll_controller)
+            self._refresh_pending = True
+        now = time.monotonic()
+        has_immediate_event = any(event.type in IMMEDIATE_REFRESH_EVENTS for event in events)
+        if self._refresh_pending and (has_immediate_event or now - self._last_refresh_at >= REFRESH_INTERVAL_SECONDS):
+            self._refresh_visible()
+            self._last_refresh_at = now
+            self._refresh_pending = False
+        self.after(POLL_INTERVAL_MS, self._poll_controller)
 
     def _refresh_chrome(self, state: AppState) -> None:
         self.platform_badge.set_status(state.platform, "ready")
         self.status_badge.set_status(state.scan_status.title(), status_kind(state.scan_status))
 
     def _refresh_all(self) -> None:
+        self._refresh_visible()
+
+    def _refresh_visible(self) -> None:
         state = self.controller.get_state()
         self._refresh_chrome(state)
-        for view in self.views.values():
-            view.refresh(state)
+        active_view = self.views.get(self.active_view_key)
+        if active_view:
+            active_view.refresh(state)
 
     def _start_scan(self) -> None:
         self.controller.start_scan()

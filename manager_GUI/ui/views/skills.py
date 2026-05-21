@@ -3,7 +3,8 @@ from __future__ import annotations
 import customtkinter as ctk
 
 from manager_GUI.core.state import AppState
-from manager_GUI.ui.components import BaseTable, BaseView
+from manager_GUI.ui.components import BaseView
+from manager_GUI.ui.tables import BaseTable
 
 
 class SkillsView(BaseView):
@@ -27,6 +28,7 @@ class SkillsView(BaseView):
                 ("Copy Path", self._copy_path, "secondary"),
                 ("Open Folder", self._open_folder, "secondary"),
             ],
+            page_size=90,
         )
 
     def _show_detail(self, row: dict[str, object]) -> None:

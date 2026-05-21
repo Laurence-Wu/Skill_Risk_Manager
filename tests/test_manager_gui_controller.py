@@ -5,8 +5,16 @@ import unittest
 from pathlib import Path
 
 from manager_GUI.core.backend_controller import BackendController
-from manager_GUI.core.events import CANDIDATE_STAGED, SNAPSHOT_COMMITTED
+from manager_GUI.core.events import (
+    CANDIDATE_STAGED,
+    CONTINUATION_PROGRESS,
+    CONTINUATION_STARTED,
+    SCAN_PROGRESS,
+    SNAPSHOT_COMMITTED,
+    ScanEvent,
+)
 from manager_GUI.core.mock_controller import MockController
+from manager_GUI.core.state import AppState
 from skill_manager.backend.models import ScanConfig, ScanEvent as BackendScanEvent
 from skill_manager.storage.repository import Repository
 from tests.test_support import writable_temp_dir
@@ -102,6 +110,42 @@ class ManagerGuiControllerTests(unittest.TestCase):
             self.assertEqual(len(state.confirmed_skills), 1)
             self.assertTrue(exported_path.exists())
             self.assertEqual(opened_folders, [root])
+
+    def test_app_state_keeps_global_progress_and_counts_monotonic(self) -> None:
+        state = AppState()
+
+        state.apply_event(
+            ScanEvent(
+                SCAN_PROGRESS,
+                progress=0.4,
+                files_checked=80,
+                directories_checked=10,
+                payload={"progress_mode": "primary", "expected_total_files": 200},
+            )
+        )
+        state.apply_event(
+            ScanEvent(
+                CONTINUATION_STARTED,
+                progress=0.2,
+                files_checked=80,
+                directories_checked=10,
+                payload={"progress_mode": "continuation", "expected_total_files": 200},
+            )
+        )
+        state.apply_event(
+            ScanEvent(
+                CONTINUATION_PROGRESS,
+                progress=0.35,
+                files_checked=20,
+                directories_checked=4,
+                payload={"progress_mode": "continuation", "expected_total_files": 100},
+            )
+        )
+
+        self.assertEqual(state.progress, 0.4)
+        self.assertEqual(state.files_checked, 80)
+        self.assertEqual(state.directories_checked, 10)
+        self.assertEqual(state.expected_total_files, 200)
 
     def _wait_until_idle(self, controller: MockController) -> None:
         deadline = time.monotonic() + 2
