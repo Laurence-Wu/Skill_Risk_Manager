@@ -15,27 +15,6 @@ class ScanTarget:
     scan_mode: str
     reason: str
 
-    def to_dict(self) -> dict:
-        return {
-            "path": str(self.path),
-            "priority": self.priority,
-            "source_type": self.source_type,
-            "max_depth": self.max_depth,
-            "scan_mode": self.scan_mode,
-            "reason": self.reason,
-        }
-
-    @classmethod
-    def from_dict(cls, raw_target: dict) -> "ScanTarget":
-        return cls(
-            path=Path(raw_target["path"]),
-            priority=int(raw_target["priority"]),
-            source_type=str(raw_target["source_type"]),
-            max_depth=int(raw_target["max_depth"]),
-            scan_mode=str(raw_target["scan_mode"]),
-            reason=str(raw_target["reason"]),
-        )
-
 
 @dataclass
 class SkillRecord:
@@ -77,9 +56,6 @@ class ScanEvent:
     message: str = ""
     payload: dict = field(default_factory=dict)
     created_at: float = field(default_factory=time.time)
-
-    def to_dict(self) -> dict:
-        return asdict(self)
 
 
 @dataclass
@@ -157,4 +133,3 @@ class CancelToken:
     def wait_if_paused(self, sleep_seconds: float = 0.1) -> None:
         while self.paused and not self.cancelled:
             time.sleep(sleep_seconds)
-
