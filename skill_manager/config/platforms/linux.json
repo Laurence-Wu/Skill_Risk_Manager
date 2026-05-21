@@ -1,0 +1,229 @@
+{
+  "schema_version": 2,
+  "last_researched_utc": "2026-05-21",
+  "name": "linux",
+  "display_name": "Linux / WSL",
+  "path_style": "posix",
+  "case_sensitive_paths": true,
+  "home_resolution": {
+    "python": "Path.home()",
+    "shell": "$HOME",
+    "example": "/home/<username>"
+  },
+  "claude_config_root": "~/.claude",
+  "claude_config_root_windows_note": "%USERPROFILE%\\.claude on Windows; every ~/.claude path should be remapped if CLAUDE_CONFIG_DIR is set.",
+  "environment_overrides": {
+    "claude_config_root": "CLAUDE_CONFIG_DIR",
+    "additional_directories_claude_md": "CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD",
+    "skip_prompt_history": "CLAUDE_CODE_SKIP_PROMPT_HISTORY",
+    "disable_auto_memory": "CLAUDE_CODE_DISABLE_AUTO_MEMORY",
+    "powershell_tool": "CLAUDE_CODE_USE_POWERSHELL_TOOL"
+  },
+  "direct_claude_config_roots": [
+    "~/.claude",
+    "${CLAUDE_CONFIG_DIR}"
+  ],
+  "personal_scope_paths": {
+    "skills": [
+      "{claude_config_root}/skills/<skill-name>/SKILL.md"
+    ],
+    "commands": [
+      "{claude_config_root}/commands/<command>.md"
+    ],
+    "agents": [
+      "{claude_config_root}/agents/<agent>.md"
+    ],
+    "rules": [
+      "{claude_config_root}/rules/**/*.md"
+    ],
+    "memory": [
+      "{claude_config_root}/CLAUDE.md"
+    ],
+    "settings": [
+      "{claude_config_root}/settings.json"
+    ],
+    "plugins": [
+      "{claude_config_root}/plugins/**"
+    ],
+    "global_state": [
+      "~/.claude.json"
+    ],
+    "auto_memory": [
+      "{claude_config_root}/projects/<project>/memory/MEMORY.md",
+      "{claude_config_root}/projects/<project>/memory/*.md"
+    ],
+    "ui": [
+      "{claude_config_root}/keybindings.json",
+      "{claude_config_root}/themes/*.json"
+    ]
+  },
+  "project_scope_paths": {
+    "skills": [
+      "<repo>/.claude/skills/<skill-name>/SKILL.md",
+      "<repo>/<package>/.claude/skills/<skill-name>/SKILL.md"
+    ],
+    "commands": [
+      "<repo>/.claude/commands/<command>.md"
+    ],
+    "agents": [
+      "<repo>/.claude/agents/<agent>.md"
+    ],
+    "rules": [
+      "<repo>/.claude/rules/**/*.md"
+    ],
+    "memory": [
+      "<repo>/CLAUDE.md",
+      "<repo>/.claude/CLAUDE.md"
+    ],
+    "local_memory": [
+      "<repo>/CLAUDE.local.md"
+    ],
+    "settings": [
+      "<repo>/.claude/settings.json"
+    ],
+    "local_settings": [
+      "<repo>/.claude/settings.local.json"
+    ],
+    "mcp": [
+      "<repo>/.mcp.json"
+    ],
+    "worktree": [
+      "<repo>/.worktreeinclude"
+    ]
+  },
+  "plugin_scope_paths": {
+    "manifest": [
+      "<plugin-root>/.claude-plugin/plugin.json"
+    ],
+    "marketplace": [
+      "<marketplace-root>/.claude-plugin/marketplace.json"
+    ],
+    "skills": [
+      "<plugin-root>/skills/<skill-name>/SKILL.md",
+      "<plugin-root>/commands/<command>.md",
+      "<plugin-root>/SKILL.md"
+    ],
+    "agents": [
+      "<plugin-root>/agents/<agent>.md"
+    ],
+    "hooks": [
+      "<plugin-root>/hooks/hooks.json",
+      "<plugin-root>/.claude-plugin/plugin.json#hooks"
+    ],
+    "mcp": [
+      "<plugin-root>/.mcp.json"
+    ],
+    "lsp": [
+      "<plugin-root>/.lsp.json"
+    ],
+    "monitors": [
+      "<plugin-root>/monitors/monitors.json"
+    ],
+    "executables": [
+      "<plugin-root>/bin/*"
+    ],
+    "settings": [
+      "<plugin-root>/settings.json"
+    ]
+  },
+  "managed_scope_paths": {
+    "directories": [
+      "/etc/claude-code"
+    ],
+    "files": [
+      "CLAUDE.md",
+      "managed-settings.json",
+      "managed-mcp.json",
+      "managed-settings.d/*.json"
+    ]
+  },
+  "developer_root_candidates": [
+    "~/Developer",
+    "~/dev",
+    "~/code",
+    "~/Code",
+    "~/src",
+    "~/Projects",
+    "~/projects",
+    "~/work",
+    "~/workspace",
+    "~/Documents",
+    "~/Desktop",
+    "~/Downloads",
+    "/mnt/c/Users/{windows_username}/.claude",
+    "/mnt/c/Users/{windows_username}/source/repos"
+  ],
+  "hard_ignored_roots": [
+    "/proc",
+    "/sys",
+    "/dev",
+    "/run",
+    "/var/cache",
+    "/var/lib/docker",
+    "/var/lib/containerd",
+    "/snap",
+    "/nix/store",
+    "/usr/lib",
+    "/usr/share",
+    "/tmp",
+    "/lost+found"
+  ],
+  "scan_strategy": {
+    "foreground": "Resolve claude_config_root and current/project roots, scan direct Claude paths first, frontmatter-only read for markdown, JSON-light parse for configs, save snapshot only after fast exit.",
+    "fast_exit": "Exit foreground after the marginal new-skill discovery rate drops below 10% of the initial-to-current average, then update UI and persist snapshot.",
+    "shadow": "Continue low-budget cancellable scan across developer roots; stage results in a secondary pool and do not mutate primary pool automatically.",
+    "privacy": "Prompt history, transcripts, paste/image cache, credential folders and env files require explicit opt-in and should default to metadata-only or skip."
+  },
+  "cli_resolution_commands": [
+    "printenv CLAUDE_CONFIG_DIR",
+    "command -v claude",
+    "claude --version",
+    "test -d /mnt/c && echo WSL"
+  ],
+  "packaging": {
+    "preferred": "AppImage or PyInstaller onedir + desktop file",
+    "mvp": "PyInstaller onedir plus CLI entrypoint",
+    "future": [
+      "Flatpak",
+      "deb/rpm",
+      "Go scanner sidecar"
+    ]
+  },
+  "platform_notes": [
+    "Native Linux is commonly case-sensitive; WSL sees both Linux ~/.claude and Windows %USERPROFILE%/.claude via /mnt/c.",
+    "Avoid virtual filesystems and package stores; they can trap the scanner or create huge traversal cost.",
+    "Respect symlink cycle detection aggressively."
+  ],
+  "doc_sources": [
+    {
+      "name": "Claude Code .claude directory",
+      "url": "https://code.claude.com/docs/en/claude-directory",
+      "notes": "Canonical user/project/global config files, application data, Windows path expansion, CLAUDE_CONFIG_DIR behavior."
+    },
+    {
+      "name": "Claude Code settings",
+      "url": "https://code.claude.com/docs/en/settings",
+      "notes": "Configuration scopes, precedence, managed policy locations, settings.local behavior, plugin settings."
+    },
+    {
+      "name": "Claude Code skills",
+      "url": "https://code.claude.com/docs/en/skills",
+      "notes": "SKILL.md layout, skill frontmatter, personal/project/plugin skill locations, live discovery."
+    },
+    {
+      "name": "Claude Code plugins",
+      "url": "https://code.claude.com/docs/en/plugins",
+      "notes": "Plugin manifest and plugin root layout."
+    },
+    {
+      "name": "Claude Code plugins reference",
+      "url": "https://code.claude.com/docs/en/plugins-reference",
+      "notes": "Component schemas: skills, agents, hooks, MCP, LSP, monitors."
+    },
+    {
+      "name": "Claude Code environment variables",
+      "url": "https://code.claude.com/docs/en/env-vars",
+      "notes": "CLAUDE_CONFIG_DIR, CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD, prompt history controls."
+    }
+  ]
+}

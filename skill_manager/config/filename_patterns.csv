@@ -1,0 +1,90 @@
+pattern,match_type,enabled,priority,category,scope_hint,scan_phase,parser_mode,confidence_hint,reason
+SKILL.md,exact_filename,True,100,skill_entrypoint,all,foreground,frontmatter_only,confirmed,Required entrypoint for Claude Code skills.
+skill.md,case_insensitive_filename,True,78,skill_entrypoint_candidate,all,foreground,frontmatter_only,candidate,Case variant: stage as candidate; not canonical.
+*/skills/*/SKILL.md,path_glob,True,98,skill_entrypoint,standalone_or_plugin,foreground,frontmatter_only,confirmed,Canonical skills/<name>/SKILL.md layout.
+*/.claude/skills/*/SKILL.md,path_glob,True,99,skill_entrypoint,project,foreground,frontmatter_only,confirmed,Project-scoped Claude Code skill.
+{claude_config_root}/skills/*/SKILL.md,path_template_glob,True,100,skill_entrypoint,personal,foreground,frontmatter_only,confirmed,Personal skills available across projects.
+*/.claude/skills/run-*/SKILL.md,path_glob,True,92,generated_skill,project,foreground,frontmatter_only,confirmed,Generated run/verify skill recipe from /run-skill-generator.
+*/plugins/**/skills/*/SKILL.md,path_glob,True,94,plugin_skill_entrypoint,plugin,foreground,frontmatter_only,confirmed,Installed or development plugin-provided skill.
+*/.claude/plugins/**/skills/*/SKILL.md,path_glob,True,96,plugin_skill_entrypoint,personal_plugin_cache,foreground,frontmatter_only,confirmed,Likely installed plugin cache containing plugin skills.
+*/marketplaces/**/plugins/**/skills/*/SKILL.md,path_glob,True,88,marketplace_skill_entrypoint,plugin_marketplace_cache,shadow,frontmatter_only,confirmed,Cached marketplace plugin skill; useful for inventory but not always enabled.
+*/SKILL.md,path_glob,True,70,nonstandard_skill_candidate,unknown,shadow,frontmatter_only,candidate,Nonstandard skill entrypoint outside recognized folder; inspect parent context.
+*/.claude-plugin/**/SKILL.md,path_glob,True,40,misplaced_plugin_skill,plugin_candidate,shadow,frontmatter_only,suspicious,Often a mistake: plugin components should not be placed inside .claude-plugin except plugin.json.
+*/.claude/commands/*.md,path_glob,True,86,command_skill,project,foreground,frontmatter_or_markdown,confirmed,Legacy/project custom commands behave like slash-invoked skills.
+{claude_config_root}/commands/*.md,path_template_glob,True,84,command_skill,personal,foreground,frontmatter_or_markdown,confirmed,Personal legacy commands.
+*/commands/*.md,path_glob,True,72,command_skill_candidate,plugin_or_unknown,shadow,frontmatter_or_markdown,candidate,Plugin commands or nonstandard command-like prompts.
+*/plugins/**/commands/*.md,path_glob,True,82,plugin_command_skill,plugin,foreground,frontmatter_or_markdown,confirmed,Plugin flat markdown commands.
+*.md,extension,True,18,markdown_fallback,unknown,shadow,frontmatter_probe,candidate,Late fallback to avoid missing uncommon skill layouts.
+CLAUDE.md,exact_filename,True,92,memory,project_or_global,foreground,frontmatter_or_markdown,confirmed,Claude Code memory/instructions file.
+.claude/CLAUDE.md,path_suffix,True,92,memory,project,foreground,frontmatter_or_markdown,confirmed,Project Claude memory under .claude.
+CLAUDE.local.md,exact_filename,True,74,memory_local,project_local,foreground,frontmatter_or_markdown,confirmed,Private project-specific Claude memory.
+*/CLAUDE.md,path_glob,True,66,memory_nested,project_candidate,shadow,frontmatter_or_markdown,candidate,Nested/ancestor Claude memory file.
+*/.claude/CLAUDE.md,path_glob,True,80,memory_nested,project_candidate,foreground,frontmatter_or_markdown,confirmed,Nested .claude project memory.
+*/.claude/rules/*.md,path_glob,True,86,rule,project,foreground,frontmatter_or_markdown,confirmed,Path-scoped or global project rules.
+*/.claude/rules/**/*.md,path_glob,True,86,rule,project,foreground,frontmatter_or_markdown,confirmed,Recursive project rules.
+{claude_config_root}/rules/*.md,path_template_glob,True,82,rule,personal,foreground,frontmatter_or_markdown,confirmed,User-level Claude rules.
+{claude_config_root}/rules/**/*.md,path_template_glob,True,82,rule,personal,foreground,frontmatter_or_markdown,confirmed,Recursive user-level Claude rules.
+AGENTS.md,exact_filename,True,54,interop_memory,project,shadow,frontmatter_or_markdown,candidate,Interoperable agent instruction file; useful for migration/import suggestions.
+GEMINI.md,exact_filename,True,38,interop_memory,project,shadow,frontmatter_or_markdown,candidate,Other-agent context file; useful for migration/import suggestions.
+.cursorrules,exact_filename,True,34,interop_memory,project,shadow,frontmatter_or_markdown,candidate,Cursor rules; migration candidate.
+.windsurfrules,exact_filename,True,34,interop_memory,project,shadow,frontmatter_or_markdown,candidate,Windsurf rules; migration candidate.
+.github/copilot-instructions.md,path_suffix,True,32,interop_memory,project,shadow,frontmatter_or_markdown,candidate,Copilot repository instructions; migration candidate.
+.continue/**/*.md,path_glob,True,24,interop_memory,project,shadow,frontmatter_or_markdown,candidate,Continue.dev guidance; low-priority context candidate.
+.aider.conf.yml,exact_filename,True,18,interop_config,project,shadow,frontmatter_or_markdown,candidate,Aider config; low-priority AI-tool context signal.
+.aider.conf.yaml,exact_filename,True,18,interop_config,project,shadow,frontmatter_or_markdown,candidate,Aider config; low-priority AI-tool context signal.
+.claude/settings.json,path_suffix,True,88,settings,project,foreground,json_light,confirmed,Shared project Claude settings.
+.claude/settings.local.json,path_suffix,True,82,settings_local,project_local,foreground,json_light,confirmed,Local project Claude settings.
+settings.json,exact_filename,True,34,settings_candidate,unknown,shadow,json_light,candidate,"Generic settings; only meaningful under .claude, plugin root, or config root."
+{claude_config_root}/settings.json,path_template_glob,True,88,settings,personal,foreground,json_light,confirmed,User-level Claude settings.
+~/.claude.json,path_suffix,True,78,global_config,personal,foreground,json_redacted,confirmed,"Global app state, OAuth, personal/local MCP config and per-project state."
+.mcp.json,exact_filename,True,82,mcp,project_or_plugin,foreground,json_light,confirmed,Project or plugin MCP server configuration.
+managed-mcp.json,exact_filename,True,80,managed_mcp,managed,foreground,json_light,confirmed,Enterprise managed MCP server configuration.
+managed-settings.json,exact_filename,True,82,managed_settings,managed,foreground,json_light,confirmed,Enterprise managed settings.
+managed-settings.d/*.json,path_glob,True,78,managed_settings_fragment,managed,foreground,json_light,confirmed,Enterprise managed settings drop-in fragments.
+.claude-plugin/plugin.json,path_suffix,True,96,plugin_manifest,plugin,foreground,json_light,confirmed,Plugin identity and metadata manifest.
+.claude-plugin/marketplace.json,path_suffix,True,76,plugin_marketplace,marketplace,foreground,json_light,confirmed,Marketplace catalog stored in a repo or local directory.
+marketplace.json,exact_filename,True,48,plugin_marketplace_candidate,marketplace,shadow,json_light,candidate,Marketplace catalog candidate; confirm parent .claude-plugin or source config.
+hooks/hooks.json,path_suffix,True,76,hooks,plugin,foreground,json_light,confirmed,Plugin hook configuration file.
+.lsp.json,exact_filename,True,66,lsp,plugin,shadow,json_light,confirmed,Plugin LSP server configuration.
+monitors/monitors.json,path_suffix,True,60,monitor,plugin,shadow,json_light,confirmed,Plugin background monitor configuration.
+keybindings.json,exact_filename,True,48,ui_config,personal,shadow,json_light,confirmed,Claude Code custom keyboard shortcuts.
+themes/*.json,path_glob,True,42,ui_theme,personal,shadow,json_light,confirmed,Claude Code custom themes.
+remote-settings.json,exact_filename,True,30,cached_managed_settings,personal,shadow,json_redacted,candidate,Cached server-managed settings; inspect metadata only.
+stats-cache.json,exact_filename,True,24,usage_cache,personal,shadow,json_redacted,candidate,Usage cache; not relevant to skill discovery except diagnostics.
+history.jsonl,exact_filename,False,18,prompt_history,personal,opt_in,jsonl_redacted,opt_in,Prompt history; disabled by default due privacy.
+projects/*/memory/MEMORY.md,path_glob,True,72,auto_memory,personal,foreground,frontmatter_or_markdown,confirmed,Claude Code auto-memory entrypoint per project.
+projects/*/memory/*.md,path_glob,True,60,auto_memory_topic,personal,shadow,frontmatter_or_markdown,candidate,Auto-memory topic files.
+projects/*/*.jsonl,path_glob,False,16,transcript,personal,opt_in,jsonl_redacted,opt_in,Session transcript; disabled by default due privacy.
+name:,frontmatter_key,True,74,skill_frontmatter,markdown_frontmatter,foreground,frontmatter_only,candidate,Skill display name / override.
+description:,frontmatter_key,True,88,skill_frontmatter,markdown_frontmatter,foreground,frontmatter_only,candidate,Primary skill trigger field.
+when_to_use:,frontmatter_key,True,84,skill_frontmatter,markdown_frontmatter,foreground,frontmatter_only,candidate,Additional model-invocation trigger field.
+argument-hint:,frontmatter_key,True,62,skill_frontmatter,markdown_frontmatter,foreground,frontmatter_only,candidate,Autocomplete argument hint.
+arguments:,frontmatter_key,True,62,skill_frontmatter,markdown_frontmatter,foreground,frontmatter_only,candidate,Named positional arguments.
+disable-model-invocation:,frontmatter_key,True,72,skill_frontmatter,markdown_frontmatter,foreground,frontmatter_only,candidate,Manual-only skill toggle.
+user-invocable:,frontmatter_key,True,66,skill_frontmatter,markdown_frontmatter,foreground,frontmatter_only,candidate,Slash-menu visibility toggle.
+allowed-tools:,frontmatter_key,True,70,skill_frontmatter,markdown_frontmatter,foreground,frontmatter_only,candidate,Preapproved tools for skill.
+model:,frontmatter_key,True,52,skill_frontmatter,markdown_frontmatter,foreground,frontmatter_only,candidate,Model override in skill/agent.
+effort:,frontmatter_key,True,52,skill_frontmatter,markdown_frontmatter,foreground,frontmatter_only,candidate,Effort override in skill/agent.
+context:,frontmatter_key,True,58,skill_frontmatter,markdown_frontmatter,foreground,frontmatter_only,candidate,Forked subagent execution setting.
+agent:,frontmatter_key,True,58,skill_frontmatter,markdown_frontmatter,foreground,frontmatter_only,candidate,Agent used when context=fork.
+hooks:,frontmatter_key,True,60,skill_frontmatter_or_settings,markdown_frontmatter,foreground,frontmatter_only,candidate,Skill/agent lifecycle hooks.
+paths:,frontmatter_key,True,64,skill_or_rule_frontmatter,markdown_frontmatter,foreground,frontmatter_only,candidate,Path-gated skill/rule field.
+shell:,frontmatter_key,True,48,skill_frontmatter,markdown_frontmatter,foreground,frontmatter_only,candidate,Shell selection for inline commands.
+tools:,frontmatter_key,True,54,agent_frontmatter,markdown_frontmatter,foreground,frontmatter_only,candidate,Subagent tool allowlist.
+disallowedTools:,frontmatter_key,True,54,agent_frontmatter,markdown_frontmatter,foreground,frontmatter_only,candidate,Subagent tool denylist.
+maxTurns:,frontmatter_key,True,48,agent_frontmatter,markdown_frontmatter,foreground,frontmatter_only,candidate,Subagent turn limit.
+memory:,frontmatter_key,True,48,agent_frontmatter,markdown_frontmatter,foreground,frontmatter_only,candidate,Subagent memory setting.
+background:,frontmatter_key,True,42,agent_frontmatter,markdown_frontmatter,foreground,frontmatter_only,candidate,Background subagent flag.
+isolation:,frontmatter_key,True,44,agent_frontmatter,markdown_frontmatter,foreground,frontmatter_only,candidate,Worktree isolation for agents.
+*/skills/*/scripts/*,path_glob,True,46,skill_support_script,standalone_or_plugin,shadow,metadata_only,candidate,Supporting script bundled with a skill.
+*/skills/*/examples/*,path_glob,True,38,skill_support_example,standalone_or_plugin,shadow,metadata_only,candidate,Example files bundled with a skill.
+*/skills/*/reference*,path_glob,True,38,skill_support_reference,standalone_or_plugin,shadow,metadata_only,candidate,Reference material bundled with a skill.
+*/skills/*/template*,path_glob,True,38,skill_support_template,standalone_or_plugin,shadow,metadata_only,candidate,Template material bundled with a skill.
+*/skills/*/*.py,path_glob,True,36,skill_support_script,standalone_or_plugin,shadow,metadata_only,candidate,Python support file inside skill folder.
+*/skills/*/*.sh,path_glob,True,36,skill_support_script,standalone_or_plugin,shadow,metadata_only,candidate,Shell support file inside skill folder.
+*/skills/*/*.ps1,path_glob,True,36,skill_support_script,standalone_or_plugin,shadow,metadata_only,candidate,PowerShell support file inside skill folder.
+*/skills/*/*.js,path_glob,True,34,skill_support_script,standalone_or_plugin,shadow,metadata_only,candidate,JavaScript support file inside skill folder.
+*/skills/*/*.ts,path_glob,True,34,skill_support_script,standalone_or_plugin,shadow,metadata_only,candidate,TypeScript support file inside skill folder.
+*/plugins/**/bin/*,path_glob,True,32,plugin_executable,plugin,shadow,metadata_only,candidate,Plugin executable exposed on PATH while enabled.
+*/plugins/**/settings.json,path_glob,True,42,plugin_settings,plugin,shadow,metadata_only,confirmed,Default settings applied when plugin is enabled.
+*/.worktreeinclude,path_glob,True,34,worktree_config,project,shadow,metadata_only,confirmed,Gitignored files copied into Claude-created worktrees.

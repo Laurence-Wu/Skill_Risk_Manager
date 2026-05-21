@@ -1,0 +1,2 @@
+"""Shell layout components."""
+

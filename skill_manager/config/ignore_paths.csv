@@ -1,0 +1,188 @@
+path,match_type,enabled,os,behavior,phase,reason
+.git,path_suffix,True,all,hard_ignore,foreground_and_shadow,"VCS metadata is huge/noisy; only use root marker, do not descend."
+.hg,path_suffix,True,all,hard_ignore,foreground_and_shadow,"VCS metadata is huge/noisy; only use root marker, do not descend."
+.svn,path_suffix,True,all,hard_ignore,foreground_and_shadow,"VCS metadata is huge/noisy; only use root marker, do not descend."
+.jj,path_suffix,True,all,hard_ignore,foreground_and_shadow,"VCS metadata is huge/noisy; only use root marker, do not descend."
+.sl,path_suffix,True,all,hard_ignore,foreground_and_shadow,"VCS metadata is huge/noisy; only use root marker, do not descend."
+.fossil,path_suffix,True,all,hard_ignore,foreground_and_shadow,"VCS metadata is huge/noisy; only use root marker, do not descend."
+.bzr,path_suffix,True,all,hard_ignore,foreground_and_shadow,"VCS metadata is huge/noisy; only use root marker, do not descend."
+node_modules,path_suffix,True,all,hard_ignore,foreground_and_shadow,JavaScript dependency/build cache; unlikely to contain active Claude skills except accidental copies.
+bower_components,path_suffix,True,all,hard_ignore,foreground_and_shadow,JavaScript dependency/build cache; unlikely to contain active Claude skills except accidental copies.
+.pnpm-store,path_suffix,True,all,hard_ignore,foreground_and_shadow,JavaScript dependency/build cache; unlikely to contain active Claude skills except accidental copies.
+.yarn/cache,path_suffix,True,all,hard_ignore,foreground_and_shadow,JavaScript dependency/build cache; unlikely to contain active Claude skills except accidental copies.
+.yarn/unplugged,path_suffix,True,all,hard_ignore,foreground_and_shadow,JavaScript dependency/build cache; unlikely to contain active Claude skills except accidental copies.
+.yarn/build-state.yml,path_suffix,True,all,hard_ignore,foreground_and_shadow,JavaScript dependency/build cache; unlikely to contain active Claude skills except accidental copies.
+.turbo,path_suffix,True,all,hard_ignore,foreground_and_shadow,JavaScript dependency/build cache; unlikely to contain active Claude skills except accidental copies.
+.next,path_suffix,True,all,hard_ignore,foreground_and_shadow,JavaScript dependency/build cache; unlikely to contain active Claude skills except accidental copies.
+.nuxt,path_suffix,True,all,hard_ignore,foreground_and_shadow,JavaScript dependency/build cache; unlikely to contain active Claude skills except accidental copies.
+.svelte-kit,path_suffix,True,all,hard_ignore,foreground_and_shadow,JavaScript dependency/build cache; unlikely to contain active Claude skills except accidental copies.
+.angular/cache,path_suffix,True,all,hard_ignore,foreground_and_shadow,JavaScript dependency/build cache; unlikely to contain active Claude skills except accidental copies.
+__pycache__,path_suffix,True,all,hard_ignore,foreground_and_shadow,Python cache/virtualenv/dependency directory; high fanout and low signal.
+.pytest_cache,path_suffix,True,all,hard_ignore,foreground_and_shadow,Python cache/virtualenv/dependency directory; high fanout and low signal.
+.mypy_cache,path_suffix,True,all,hard_ignore,foreground_and_shadow,Python cache/virtualenv/dependency directory; high fanout and low signal.
+.ruff_cache,path_suffix,True,all,hard_ignore,foreground_and_shadow,Python cache/virtualenv/dependency directory; high fanout and low signal.
+.tox,path_suffix,True,all,hard_ignore,foreground_and_shadow,Python cache/virtualenv/dependency directory; high fanout and low signal.
+.nox,path_suffix,True,all,hard_ignore,foreground_and_shadow,Python cache/virtualenv/dependency directory; high fanout and low signal.
+.venv,path_suffix,True,all,hard_ignore,foreground_and_shadow,Python cache/virtualenv/dependency directory; high fanout and low signal.
+venv,path_suffix,True,all,hard_ignore,foreground_and_shadow,Python cache/virtualenv/dependency directory; high fanout and low signal.
+env,path_suffix,True,all,hard_ignore,foreground_and_shadow,Python cache/virtualenv/dependency directory; high fanout and low signal.
+.env,path_suffix,True,all,hard_ignore,foreground_and_shadow,Python cache/virtualenv/dependency directory; high fanout and low signal.
+site-packages,path_suffix,True,all,hard_ignore,foreground_and_shadow,Python cache/virtualenv/dependency directory; high fanout and low signal.
+dist-info,path_suffix,True,all,hard_ignore,foreground_and_shadow,Python cache/virtualenv/dependency directory; high fanout and low signal.
+egg-info,path_suffix,True,all,hard_ignore,foreground_and_shadow,Python cache/virtualenv/dependency directory; high fanout and low signal.
+target,path_suffix,True,all,hard_ignore,foreground_and_shadow,Build/dependency artifact directory; high fanout and low signal.
+build,path_suffix,True,all,hard_ignore,foreground_and_shadow,Build/dependency artifact directory; high fanout and low signal.
+dist,path_suffix,True,all,hard_ignore,foreground_and_shadow,Build/dependency artifact directory; high fanout and low signal.
+out,path_suffix,True,all,hard_ignore,foreground_and_shadow,Build/dependency artifact directory; high fanout and low signal.
+bin/Debug,path_suffix,True,all,hard_ignore,foreground_and_shadow,Build/dependency artifact directory; high fanout and low signal.
+bin/Release,path_suffix,True,all,hard_ignore,foreground_and_shadow,Build/dependency artifact directory; high fanout and low signal.
+obj,path_suffix,True,all,hard_ignore,foreground_and_shadow,Build/dependency artifact directory; high fanout and low signal.
+cmake-build-debug,path_suffix,True,all,hard_ignore,foreground_and_shadow,Build/dependency artifact directory; high fanout and low signal.
+cmake-build-release,path_suffix,True,all,hard_ignore,foreground_and_shadow,Build/dependency artifact directory; high fanout and low signal.
+.gradle,path_suffix,True,all,hard_ignore,foreground_and_shadow,Build/dependency artifact directory; high fanout and low signal.
+.m2/repository,path_suffix,True,all,hard_ignore,foreground_and_shadow,Build/dependency artifact directory; high fanout and low signal.
+.stack-work,path_suffix,True,all,hard_ignore,foreground_and_shadow,Build/dependency artifact directory; high fanout and low signal.
+vendor/bundle,path_suffix,True,all,hard_ignore,foreground_and_shadow,Build/dependency artifact directory; high fanout and low signal.
+Pods,path_suffix,True,all,hard_ignore,foreground_and_shadow,Build/dependency artifact directory; high fanout and low signal.
+.dart_tool,path_suffix,True,all,hard_ignore,foreground_and_shadow,Build/dependency artifact directory; high fanout and low signal.
+.terraform,path_suffix,True,all,hard_ignore,foreground_and_shadow,Build/dependency artifact directory; high fanout and low signal.
+.serverless,path_suffix,True,all,hard_ignore,foreground_and_shadow,Build/dependency artifact directory; high fanout and low signal.
+.parcel-cache,path_suffix,True,all,hard_ignore,foreground_and_shadow,Build/dependency artifact directory; high fanout and low signal.
+.cache,path_suffix,True,all,hard_ignore,foreground_and_shadow,Build/dependency artifact directory; high fanout and low signal.
+.vite,path_suffix,True,all,hard_ignore,foreground_and_shadow,Build/dependency artifact directory; high fanout and low signal.
+.DS_Store,exact_name,True,all,hard_ignore,foreground_and_shadow,OS metadata file.
+Thumbs.db,exact_name,True,all,hard_ignore,foreground_and_shadow,OS metadata file.
+desktop.ini,exact_name,True,all,hard_ignore,foreground_and_shadow,OS metadata file.
+.ssh,path_suffix,True,all,privacy_hard_ignore,foreground_and_shadow,Sensitive credential or key material; never scan for MVP.
+.gnupg,path_suffix,True,all,privacy_hard_ignore,foreground_and_shadow,Sensitive credential or key material; never scan for MVP.
+.pki,path_suffix,True,all,privacy_hard_ignore,foreground_and_shadow,Sensitive credential or key material; never scan for MVP.
+.aws,path_suffix,True,all,privacy_hard_ignore,foreground_and_shadow,Sensitive credential or key material; never scan for MVP.
+.azure,path_suffix,True,all,privacy_hard_ignore,foreground_and_shadow,Sensitive credential or key material; never scan for MVP.
+.gcloud,path_suffix,True,all,privacy_hard_ignore,foreground_and_shadow,Sensitive credential or key material; never scan for MVP.
+.kube,path_suffix,True,all,privacy_hard_ignore,foreground_and_shadow,Sensitive credential or key material; never scan for MVP.
+.docker,path_suffix,True,all,privacy_hard_ignore,foreground_and_shadow,Sensitive credential or key material; never scan for MVP.
+.config/gcloud,path_suffix,True,all,privacy_hard_ignore,foreground_and_shadow,Sensitive credential or key material; never scan for MVP.
+.npmrc,path_suffix,True,all,privacy_hard_ignore,foreground_and_shadow,Sensitive credential or key material; never scan for MVP.
+.netrc,path_suffix,True,all,privacy_hard_ignore,foreground_and_shadow,Sensitive credential or key material; never scan for MVP.
+.password-store,path_suffix,True,all,privacy_hard_ignore,foreground_and_shadow,Sensitive credential or key material; never scan for MVP.
+1Password,path_suffix,True,all,privacy_hard_ignore,foreground_and_shadow,Sensitive credential or key material; never scan for MVP.
+Bitwarden,path_suffix,True,all,privacy_hard_ignore,foreground_and_shadow,Sensitive credential or key material; never scan for MVP.
+KeePass,path_suffix,True,all,privacy_hard_ignore,foreground_and_shadow,Sensitive credential or key material; never scan for MVP.
+keyrings,path_suffix,True,all,privacy_hard_ignore,foreground_and_shadow,Sensitive credential or key material; never scan for MVP.
+Keychains,path_suffix,True,all,privacy_hard_ignore,foreground_and_shadow,Sensitive credential or key material; never scan for MVP.
+.env,exact_name,True,all,privacy_file_ignore,foreground_and_shadow,Credential-like filename; do not read.
+.env.local,exact_name,True,all,privacy_file_ignore,foreground_and_shadow,Credential-like filename; do not read.
+.env.production,exact_name,True,all,privacy_file_ignore,foreground_and_shadow,Credential-like filename; do not read.
+.env.development,exact_name,True,all,privacy_file_ignore,foreground_and_shadow,Credential-like filename; do not read.
+secrets.json,exact_name,True,all,privacy_file_ignore,foreground_and_shadow,Credential-like filename; do not read.
+credentials.json,exact_name,True,all,privacy_file_ignore,foreground_and_shadow,Credential-like filename; do not read.
+id_rsa,exact_name,True,all,privacy_file_ignore,foreground_and_shadow,Credential-like filename; do not read.
+id_ed25519,exact_name,True,all,privacy_file_ignore,foreground_and_shadow,Credential-like filename; do not read.
+known_hosts,exact_name,True,all,privacy_file_ignore,foreground_and_shadow,Credential-like filename; do not read.
+{claude_config_root}/projects/*/*.jsonl,path_template_glob,True,all,privacy_shadow_skip,foreground,Claude transcript/history/cache. Default UI should require opt-in before content read.
+{claude_config_root}/history.jsonl,path_template_glob,True,all,privacy_shadow_skip,foreground,Claude transcript/history/cache. Default UI should require opt-in before content read.
+{claude_config_root}/paste-cache,path_template_glob,True,all,privacy_shadow_skip,foreground,Claude transcript/history/cache. Default UI should require opt-in before content read.
+{claude_config_root}/image-cache,path_template_glob,True,all,privacy_shadow_skip,foreground,Claude transcript/history/cache. Default UI should require opt-in before content read.
+{claude_config_root}/debug,path_template_glob,True,all,privacy_shadow_skip,foreground,Claude transcript/history/cache. Default UI should require opt-in before content read.
+{claude_config_root}/file-history,path_template_glob,True,all,privacy_shadow_skip,foreground,Claude transcript/history/cache. Default UI should require opt-in before content read.
+{claude_config_root}/shell-snapshots,path_template_glob,True,all,privacy_shadow_skip,foreground,Claude transcript/history/cache. Default UI should require opt-in before content read.
+{claude_config_root}/feedback-bundles,path_template_glob,True,all,privacy_shadow_skip,foreground,Claude transcript/history/cache. Default UI should require opt-in before content read.
+{claude_config_root}/projects/*/memory,path_template_glob,False,all,metadata_only,foreground,May contain useful Claude memory; read only markdown metadata/filenames unless user opts into content analysis.
+{claude_config_root}/agent-memory,path_template_glob,False,all,metadata_only,foreground,May contain useful Claude memory; read only markdown metadata/filenames unless user opts into content analysis.
+/System,path_prefix,True,macos,hard_ignore,foreground_and_shadow,macOS system/package manager root; high fanout and low probability for active user skills.
+/Library/Caches,path_prefix,True,macos,hard_ignore,foreground_and_shadow,macOS system/package manager root; high fanout and low probability for active user skills.
+/private/var,path_prefix,True,macos,hard_ignore,foreground_and_shadow,macOS system/package manager root; high fanout and low probability for active user skills.
+/cores,path_prefix,True,macos,hard_ignore,foreground_and_shadow,macOS system/package manager root; high fanout and low probability for active user skills.
+/dev,path_prefix,True,macos,hard_ignore,foreground_and_shadow,macOS system/package manager root; high fanout and low probability for active user skills.
+/Volumes/Time Machine Backups,path_prefix,True,macos,hard_ignore,foreground_and_shadow,macOS system/package manager root; high fanout and low probability for active user skills.
+/Applications/Xcode.app,path_prefix,True,macos,hard_ignore,foreground_and_shadow,macOS system/package manager root; high fanout and low probability for active user skills.
+/usr/lib,path_prefix,True,macos,hard_ignore,foreground_and_shadow,macOS system/package manager root; high fanout and low probability for active user skills.
+/usr/share,path_prefix,True,macos,hard_ignore,foreground_and_shadow,macOS system/package manager root; high fanout and low probability for active user skills.
+/opt/homebrew/Cellar,path_prefix,True,macos,hard_ignore,foreground_and_shadow,macOS system/package manager root; high fanout and low probability for active user skills.
+/opt/homebrew/Library/Homebrew,path_prefix,True,macos,hard_ignore,foreground_and_shadow,macOS system/package manager root; high fanout and low probability for active user skills.
+/usr/local/Cellar,path_prefix,True,macos,hard_ignore,foreground_and_shadow,macOS system/package manager root; high fanout and low probability for active user skills.
+/proc,path_prefix,True,linux,hard_ignore,foreground_and_shadow,Linux system/runtime/package store; high fanout or virtual filesystem.
+/sys,path_prefix,True,linux,hard_ignore,foreground_and_shadow,Linux system/runtime/package store; high fanout or virtual filesystem.
+/dev,path_prefix,True,linux,hard_ignore,foreground_and_shadow,Linux system/runtime/package store; high fanout or virtual filesystem.
+/run,path_prefix,True,linux,hard_ignore,foreground_and_shadow,Linux system/runtime/package store; high fanout or virtual filesystem.
+/var/cache,path_prefix,True,linux,hard_ignore,foreground_and_shadow,Linux system/runtime/package store; high fanout or virtual filesystem.
+/var/lib/docker,path_prefix,True,linux,hard_ignore,foreground_and_shadow,Linux system/runtime/package store; high fanout or virtual filesystem.
+/var/lib/containerd,path_prefix,True,linux,hard_ignore,foreground_and_shadow,Linux system/runtime/package store; high fanout or virtual filesystem.
+/snap,path_prefix,True,linux,hard_ignore,foreground_and_shadow,Linux system/runtime/package store; high fanout or virtual filesystem.
+/nix/store,path_prefix,True,linux,hard_ignore,foreground_and_shadow,Linux system/runtime/package store; high fanout or virtual filesystem.
+/usr/lib,path_prefix,True,linux,hard_ignore,foreground_and_shadow,Linux system/runtime/package store; high fanout or virtual filesystem.
+/usr/share,path_prefix,True,linux,hard_ignore,foreground_and_shadow,Linux system/runtime/package store; high fanout or virtual filesystem.
+/usr/local/lib,path_prefix,True,linux,hard_ignore,foreground_and_shadow,Linux system/runtime/package store; high fanout or virtual filesystem.
+/tmp,path_prefix,True,linux,hard_ignore,foreground_and_shadow,Linux system/runtime/package store; high fanout or virtual filesystem.
+/lost+found,path_prefix,True,linux,hard_ignore,foreground_and_shadow,Linux system/runtime/package store; high fanout or virtual filesystem.
+C:/Windows,path_prefix,True,windows,hard_ignore,foreground_and_shadow,Windows system/protected/high-fanout root. Managed ClaudeCode subpath is explicitly whitelisted elsewhere.
+C:/Program Files,path_prefix,True,windows,hard_ignore,foreground_and_shadow,Windows system/protected/high-fanout root. Managed ClaudeCode subpath is explicitly whitelisted elsewhere.
+C:/Program Files (x86),path_prefix,True,windows,hard_ignore,foreground_and_shadow,Windows system/protected/high-fanout root. Managed ClaudeCode subpath is explicitly whitelisted elsewhere.
+C:/ProgramData,path_prefix,True,windows,hard_ignore,foreground_and_shadow,Windows system/protected/high-fanout root. Managed ClaudeCode subpath is explicitly whitelisted elsewhere.
+C:/$Recycle.Bin,path_prefix,True,windows,hard_ignore,foreground_and_shadow,Windows system/protected/high-fanout root. Managed ClaudeCode subpath is explicitly whitelisted elsewhere.
+C:/System Volume Information,path_prefix,True,windows,hard_ignore,foreground_and_shadow,Windows system/protected/high-fanout root. Managed ClaudeCode subpath is explicitly whitelisted elsewhere.
+C:/Recovery,path_prefix,True,windows,hard_ignore,foreground_and_shadow,Windows system/protected/high-fanout root. Managed ClaudeCode subpath is explicitly whitelisted elsewhere.
+C:/PerfLogs,path_prefix,True,windows,hard_ignore,foreground_and_shadow,Windows system/protected/high-fanout root. Managed ClaudeCode subpath is explicitly whitelisted elsewhere.
+C:/Intel,path_prefix,True,windows,hard_ignore,foreground_and_shadow,Windows system/protected/high-fanout root. Managed ClaudeCode subpath is explicitly whitelisted elsewhere.
+C:/MSOCache,path_prefix,True,windows,hard_ignore,foreground_and_shadow,Windows system/protected/high-fanout root. Managed ClaudeCode subpath is explicitly whitelisted elsewhere.
+AppData/Local/Temp,path_suffix,True,windows,hard_ignore,foreground_and_shadow,Windows app cache or system profile data; high noise.
+AppData/Local/Microsoft/Windows,path_suffix,True,windows,hard_ignore,foreground_and_shadow,Windows app cache or system profile data; high noise.
+AppData/Local/Packages,path_suffix,True,windows,hard_ignore,foreground_and_shadow,Windows app cache or system profile data; high noise.
+AppData/Local/CrashDumps,path_suffix,True,windows,hard_ignore,foreground_and_shadow,Windows app cache or system profile data; high noise.
+AppData/Local/Google/Chrome/User Data,path_suffix,True,windows,hard_ignore,foreground_and_shadow,Windows app cache or system profile data; high noise.
+AppData/Local/BraveSoftware,path_suffix,True,windows,hard_ignore,foreground_and_shadow,Windows app cache or system profile data; high noise.
+AppData/Local/Discord,path_suffix,True,windows,hard_ignore,foreground_and_shadow,Windows app cache or system profile data; high noise.
+AppData/Roaming/Microsoft/Windows,path_suffix,True,windows,hard_ignore,foreground_and_shadow,Windows app cache or system profile data; high noise.
+AppData/Roaming/Code/Cache,path_suffix,True,windows,hard_ignore,foreground_and_shadow,Windows app cache or system profile data; high noise.
+AppData/Roaming/Code/CachedData,path_suffix,True,windows,hard_ignore,foreground_and_shadow,Windows app cache or system profile data; high noise.
+Library/Caches,path_suffix,True,macos,hard_ignore,foreground_and_shadow,macOS app cache/container data; high noise.
+Library/Logs,path_suffix,True,macos,hard_ignore,foreground_and_shadow,macOS app cache/container data; high noise.
+Library/Containers,path_suffix,True,macos,hard_ignore,foreground_and_shadow,macOS app cache/container data; high noise.
+Library/Application Support/Code/Cache,path_suffix,True,macos,hard_ignore,foreground_and_shadow,macOS app cache/container data; high noise.
+Library/Application Support/Code/CachedData,path_suffix,True,macos,hard_ignore,foreground_and_shadow,macOS app cache/container data; high noise.
+Library/Application Support/Google/Chrome,path_suffix,True,macos,hard_ignore,foreground_and_shadow,macOS app cache/container data; high noise.
+Library/Application Support/BraveSoftware,path_suffix,True,macos,hard_ignore,foreground_and_shadow,macOS app cache/container data; high noise.
+Library/Application Support/discord,path_suffix,True,macos,hard_ignore,foreground_and_shadow,macOS app cache/container data; high noise.
+.cache,path_suffix,True,linux,hard_ignore,foreground_and_shadow,Linux desktop/browser/cache data; high noise.
+.local/share/Trash,path_suffix,True,linux,hard_ignore,foreground_and_shadow,Linux desktop/browser/cache data; high noise.
+.local/share/containers,path_suffix,True,linux,hard_ignore,foreground_and_shadow,Linux desktop/browser/cache data; high noise.
+.mozilla,path_suffix,True,linux,hard_ignore,foreground_and_shadow,Linux desktop/browser/cache data; high noise.
+.config/google-chrome,path_suffix,True,linux,hard_ignore,foreground_and_shadow,Linux desktop/browser/cache data; high noise.
+.config/chromium,path_suffix,True,linux,hard_ignore,foreground_and_shadow,Linux desktop/browser/cache data; high noise.
+.config/BraveSoftware,path_suffix,True,linux,hard_ignore,foreground_and_shadow,Linux desktop/browser/cache data; high noise.
+*.zip,filename_glob,True,all,skip_file_content,foreground_and_shadow,Binary/archive/media/database file; do not parse content during Stage 1.
+*.tar,filename_glob,True,all,skip_file_content,foreground_and_shadow,Binary/archive/media/database file; do not parse content during Stage 1.
+*.tar.gz,filename_glob,True,all,skip_file_content,foreground_and_shadow,Binary/archive/media/database file; do not parse content during Stage 1.
+*.tgz,filename_glob,True,all,skip_file_content,foreground_and_shadow,Binary/archive/media/database file; do not parse content during Stage 1.
+*.rar,filename_glob,True,all,skip_file_content,foreground_and_shadow,Binary/archive/media/database file; do not parse content during Stage 1.
+*.7z,filename_glob,True,all,skip_file_content,foreground_and_shadow,Binary/archive/media/database file; do not parse content during Stage 1.
+*.iso,filename_glob,True,all,skip_file_content,foreground_and_shadow,Binary/archive/media/database file; do not parse content during Stage 1.
+*.dmg,filename_glob,True,all,skip_file_content,foreground_and_shadow,Binary/archive/media/database file; do not parse content during Stage 1.
+*.pkg,filename_glob,True,all,skip_file_content,foreground_and_shadow,Binary/archive/media/database file; do not parse content during Stage 1.
+*.exe,filename_glob,True,all,skip_file_content,foreground_and_shadow,Binary/archive/media/database file; do not parse content during Stage 1.
+*.dll,filename_glob,True,all,skip_file_content,foreground_and_shadow,Binary/archive/media/database file; do not parse content during Stage 1.
+*.so,filename_glob,True,all,skip_file_content,foreground_and_shadow,Binary/archive/media/database file; do not parse content during Stage 1.
+*.dylib,filename_glob,True,all,skip_file_content,foreground_and_shadow,Binary/archive/media/database file; do not parse content during Stage 1.
+*.a,filename_glob,True,all,skip_file_content,foreground_and_shadow,Binary/archive/media/database file; do not parse content during Stage 1.
+*.o,filename_glob,True,all,skip_file_content,foreground_and_shadow,Binary/archive/media/database file; do not parse content during Stage 1.
+*.obj,filename_glob,True,all,skip_file_content,foreground_and_shadow,Binary/archive/media/database file; do not parse content during Stage 1.
+*.class,filename_glob,True,all,skip_file_content,foreground_and_shadow,Binary/archive/media/database file; do not parse content during Stage 1.
+*.jar,filename_glob,True,all,skip_file_content,foreground_and_shadow,Binary/archive/media/database file; do not parse content during Stage 1.
+*.war,filename_glob,True,all,skip_file_content,foreground_and_shadow,Binary/archive/media/database file; do not parse content during Stage 1.
+*.pyc,filename_glob,True,all,skip_file_content,foreground_and_shadow,Binary/archive/media/database file; do not parse content during Stage 1.
+*.pyo,filename_glob,True,all,skip_file_content,foreground_and_shadow,Binary/archive/media/database file; do not parse content during Stage 1.
+*.png,filename_glob,True,all,skip_file_content,foreground_and_shadow,Binary/archive/media/database file; do not parse content during Stage 1.
+*.jpg,filename_glob,True,all,skip_file_content,foreground_and_shadow,Binary/archive/media/database file; do not parse content during Stage 1.
+*.jpeg,filename_glob,True,all,skip_file_content,foreground_and_shadow,Binary/archive/media/database file; do not parse content during Stage 1.
+*.gif,filename_glob,True,all,skip_file_content,foreground_and_shadow,Binary/archive/media/database file; do not parse content during Stage 1.
+*.mp4,filename_glob,True,all,skip_file_content,foreground_and_shadow,Binary/archive/media/database file; do not parse content during Stage 1.
+*.mov,filename_glob,True,all,skip_file_content,foreground_and_shadow,Binary/archive/media/database file; do not parse content during Stage 1.
+*.avi,filename_glob,True,all,skip_file_content,foreground_and_shadow,Binary/archive/media/database file; do not parse content during Stage 1.
+*.mkv,filename_glob,True,all,skip_file_content,foreground_and_shadow,Binary/archive/media/database file; do not parse content during Stage 1.
+*.mp3,filename_glob,True,all,skip_file_content,foreground_and_shadow,Binary/archive/media/database file; do not parse content during Stage 1.
+*.wav,filename_glob,True,all,skip_file_content,foreground_and_shadow,Binary/archive/media/database file; do not parse content during Stage 1.
+*.pdf,filename_glob,True,all,skip_file_content,foreground_and_shadow,Binary/archive/media/database file; do not parse content during Stage 1.
+*.sqlite,filename_glob,True,all,skip_file_content,foreground_and_shadow,Binary/archive/media/database file; do not parse content during Stage 1.
+*.db,filename_glob,True,all,skip_file_content,foreground_and_shadow,Binary/archive/media/database file; do not parse content during Stage 1.
+*.parquet,filename_glob,True,all,skip_file_content,foreground_and_shadow,Binary/archive/media/database file; do not parse content during Stage 1.
+*.arrow,filename_glob,True,all,skip_file_content,foreground_and_shadow,Binary/archive/media/database file; do not parse content during Stage 1.

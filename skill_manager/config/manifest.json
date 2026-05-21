@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "generated_utc": "2026-05-21",
+  "purpose": "Stage-1 scan configuration for local Claude Code skill-management MVP.",
+  "files": {
+    "filename_patterns.csv": 89,
+    "ignore_paths.csv": 187,
+    "project_markers.csv": 47,
+    "scan_paths.csv": 67,
+    "macos.json": "platform config",
+    "linux.json": "platform config",
+    "windows.json": "platform config"
+  },
+  "default_policy": {
+    "prompt_history_and_transcripts": "disabled unless user opts in",
+    "credential_paths": "hard ignored",
+    "foreground_scan": "direct Claude paths plus high-confidence project markers",
+    "shadow_scan": "cancellable low-budget expansion to developer roots"
+  },
+  "doc_sources": [
+    {
+      "name": "Claude Code .claude directory",
+      "url": "https://code.claude.com/docs/en/claude-directory",
+      "notes": "Canonical user/project/global config files, application data, Windows path expansion, CLAUDE_CONFIG_DIR behavior."
+    },
+    {
+      "name": "Claude Code settings",
+      "url": "https://code.claude.com/docs/en/settings",
+      "notes": "Configuration scopes, precedence, managed policy locations, settings.local behavior, plugin settings."
+    },
+    {
+      "name": "Claude Code skills",
+      "url": "https://code.claude.com/docs/en/skills",
+      "notes": "SKILL.md layout, skill frontmatter, personal/project/plugin skill locations, live discovery."
+    },
+    {
+      "name": "Claude Code plugins",
+      "url": "https://code.claude.com/docs/en/plugins",
+      "notes": "Plugin manifest and plugin root layout."
+    },
+    {
+      "name": "Claude Code plugins reference",
+      "url": "https://code.claude.com/docs/en/plugins-reference",
+      "notes": "Component schemas: skills, agents, hooks, MCP, LSP, monitors."
+    },
+    {
+      "name": "Claude Code environment variables",
+      "url": "https://code.claude.com/docs/en/env-vars",
+      "notes": "CLAUDE_CONFIG_DIR, CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD, prompt history controls."
+    }
+  ]
+}

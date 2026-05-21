@@ -1,0 +1,48 @@
+marker,match_type,enabled,priority_boost,category,root_confidence,scan_behavior,reason
+.claude,exact_name,True,95,claude_project_dir,very_high,promote_and_scan_children,Direct Claude Code project configuration directory.
+.claude/skills,path_suffix,True,100,skills_dir,very_high,scan_immediate,Project skill directory.
+.claude/commands,path_suffix,True,82,commands_dir,high,scan_immediate,Legacy command-skill directory.
+.claude/agents,path_suffix,True,70,agents_dir,high,scan_immediate,Subagent definition directory.
+.claude/rules,path_suffix,True,76,rules_dir,high,scan_immediate,Project rules directory.
+CLAUDE.md,exact_name,True,72,claude_memory,high,scan_file_and_parent,Project/global memory file.
+CLAUDE.local.md,exact_name,True,55,claude_memory_local,medium,scan_file_only,Private local Claude memory file; do not assume team-shared.
+.mcp.json,exact_name,True,66,mcp_config,high,scan_file_and_parent,Project MCP configuration.
+.worktreeinclude,exact_name,True,36,worktree_config,medium,scan_file_only,Worktree inclusion configuration.
+.claude-plugin/plugin.json,path_suffix,True,92,plugin_manifest,very_high,promote_plugin_root,Claude Code plugin manifest.
+.claude-plugin/marketplace.json,path_suffix,True,72,plugin_marketplace,high,scan_marketplace_root,Claude plugin marketplace catalog.
+hooks/hooks.json,path_suffix,True,56,plugin_hooks,medium,scan_file_and_parent,Plugin hook configuration.
+.lsp.json,exact_name,True,44,plugin_lsp,medium,scan_file_and_parent,Plugin LSP server configuration.
+monitors/monitors.json,path_suffix,True,42,plugin_monitors,medium,scan_file_and_parent,Plugin monitor configuration.
+skills,exact_name,True,48,possible_skills_dir,medium,scan_if_parent_relevant,Generic skills directory; promote if parent has plugin manifest or .claude context.
+commands,exact_name,True,34,possible_commands_dir,low,scan_if_parent_relevant,Generic commands directory; promote if parent has plugin manifest or .claude context.
+agents,exact_name,True,30,possible_agents_dir,low,scan_if_parent_relevant,Generic agents directory; promote if parent has plugin manifest or .claude context.
+.git,exact_name,True,50,vcs_root,high,promote_parent_for_shadow_scan,Git repository root; scan ancestor/project .claude first and bound parent walk.
+.hg,exact_name,True,36,vcs_root,medium,promote_parent_for_shadow_scan,Mercurial repository root.
+.svn,exact_name,True,30,vcs_root,medium,promote_parent_for_shadow_scan,SVN checkout root.
+package.json,exact_name,True,28,js_project,medium,promote_parent_for_shadow_scan,Node/JS project root; likely dev workspace for Claude Code.
+pnpm-workspace.yaml,exact_name,True,24,js_monorepo,medium,promote_parent_for_shadow_scan,PNPM monorepo root.
+yarn.lock,exact_name,True,16,js_project,low,promote_parent_for_shadow_scan,JS project signal.
+package-lock.json,exact_name,True,16,js_project,low,promote_parent_for_shadow_scan,JS project signal.
+pyproject.toml,exact_name,True,28,python_project,medium,promote_parent_for_shadow_scan,Python project root; likely dev workspace.
+setup.py,exact_name,True,20,python_project,medium,promote_parent_for_shadow_scan,Python project root.
+requirements.txt,exact_name,True,14,python_project,low,promote_parent_for_shadow_scan,Python dependency file; weak root signal.
+Cargo.toml,exact_name,True,28,rust_project,medium,promote_parent_for_shadow_scan,Rust project root.
+go.mod,exact_name,True,28,go_project,medium,promote_parent_for_shadow_scan,Go project root.
+pom.xml,exact_name,True,24,java_project,medium,promote_parent_for_shadow_scan,Maven Java project root.
+build.gradle,exact_name,True,22,java_project,medium,promote_parent_for_shadow_scan,Gradle Java/Kotlin project root.
+build.gradle.kts,exact_name,True,22,java_project,medium,promote_parent_for_shadow_scan,Gradle Kotlin project root.
+CMakeLists.txt,exact_name,True,20,cpp_project,medium,promote_parent_for_shadow_scan,C/C++ CMake project root.
+Makefile,exact_name,True,16,build_project,low,promote_parent_for_shadow_scan,Build root signal.
+justfile,exact_name,True,16,build_project,low,promote_parent_for_shadow_scan,Task runner root signal.
+Taskfile.yml,exact_name,True,16,build_project,low,promote_parent_for_shadow_scan,Task runner root signal.
+Dockerfile,exact_name,True,14,container_project,low,promote_parent_for_shadow_scan,Containerized project signal.
+docker-compose.yml,exact_name,True,18,container_project,low,promote_parent_for_shadow_scan,Docker compose project signal.
+compose.yaml,exact_name,True,18,container_project,low,promote_parent_for_shadow_scan,Docker compose project signal.
+README.md,exact_name,True,10,documentation_root,low,promote_parent_for_shadow_scan,Project docs signal; weak alone.
+AGENTS.md,exact_name,True,28,agent_instructions,medium,stage_for_migration_suggestions,Interoperable agent instruction file.
+GEMINI.md,exact_name,True,18,other_agent_instructions,low,stage_for_migration_suggestions,Other agent context file.
+.cursorrules,exact_name,True,18,other_agent_rules,low,stage_for_migration_suggestions,Cursor project rule file.
+.cursor,exact_name,True,12,other_agent_config,low,stage_for_migration_suggestions,Cursor config directory.
+.windsurfrules,exact_name,True,18,other_agent_rules,low,stage_for_migration_suggestions,Windsurf project rule file.
+.continue,exact_name,True,12,other_agent_config,low,stage_for_migration_suggestions,Continue.dev config directory.
+.github/copilot-instructions.md,path_suffix,True,18,other_agent_rules,low,stage_for_migration_suggestions,GitHub Copilot instruction file.

@@ -1,0 +1,68 @@
+path,enabled,os,priority,phase,recursive,max_depth,source_type,reason
+{claude_config_root}/skills,True,all,100,foreground,True,4,personal_skills,Personal Claude Code skills.
+{claude_config_root}/plugins,True,all,96,foreground,True,8,installed_plugins,Installed plugins and marketplace caches; contains plugin skills/agents/hooks/MCP/LSP.
+{claude_config_root}/commands,True,all,84,foreground,True,2,personal_commands,Legacy personal commands.
+{claude_config_root}/agents,True,all,72,foreground,True,3,personal_agents,User-level subagents.
+{claude_config_root}/rules,True,all,76,foreground,True,6,personal_rules,User-level rules.
+{claude_config_root}/output-styles,True,all,50,foreground,True,2,personal_output_styles,User-level output styles.
+{claude_config_root}/agent-memory,True,all,42,foreground,True,4,personal_agent_memory,Persistent subagent memory; metadata only by default.
+{claude_config_root}/projects/*/memory,True,all,58,foreground,True,3,auto_memory,Auto-memory markdown; content analysis optional.
+{claude_config_root}/settings.json,True,all,88,foreground,False,0,personal_settings,User Claude settings.
+{claude_config_root}/CLAUDE.md,True,all,82,foreground,False,0,personal_memory,Global Claude memory file.
+{claude_config_root}/keybindings.json,True,all,38,foreground,False,0,personal_ui,Keyboard shortcuts.
+{claude_config_root}/themes,True,all,34,foreground,True,2,personal_ui,Custom themes.
+~/.claude.json,True,all,78,foreground,False,0,global_state,Global app state and personal/local MCP config; parse redacted metadata only.
+{project_root}/.claude/skills,True,all,100,foreground,True,5,project_skills,Project-scoped skills.
+{project_root}/.claude/commands,True,all,86,foreground,True,3,project_commands,Legacy project commands.
+{project_root}/.claude/agents,True,all,72,shadow,True,3,project_agents,Project subagents.
+{project_root}/.claude/rules,True,all,80,foreground,True,6,project_rules,"Project rules, recursive."
+{project_root}/.claude/output-styles,True,all,50,shadow,True,2,project_output_styles,Project output styles.
+{project_root}/.claude/agent-memory,True,all,42,shadow,True,4,project_agent_memory,Project subagent memory.
+{project_root}/.claude/settings.json,True,all,88,foreground,False,0,project_settings,Shared project Claude settings.
+{project_root}/.claude/settings.local.json,True,all,82,foreground,False,0,project_settings_local,Private local project settings.
+{project_root}/.claude/CLAUDE.md,True,all,82,foreground,False,0,project_memory,Project Claude memory under .claude.
+{project_root}/CLAUDE.md,True,all,82,foreground,False,0,project_memory,Project root Claude memory.
+{project_root}/CLAUDE.local.md,True,all,58,shadow,False,0,project_memory_local,Private local project memory.
+{project_root}/.mcp.json,True,all,76,foreground,False,0,project_mcp,Project MCP server config.
+{project_root}/.worktreeinclude,True,all,36,shadow,False,0,project_worktree,Worktree include file.
+{project_root}/**/.claude/skills,True,all,82,foreground,True,5,nested_project_skills,Nested monorepo package skills discovered on demand.
+{project_root}/**/.claude/rules,True,all,62,shadow,True,5,nested_project_rules,Nested monorepo rules.
+{project_root}/**/.claude-plugin/plugin.json,True,all,86,foreground,False,0,plugin_manifest_search,Find local plugin development roots.
+{plugin_root}/skills,True,all,90,foreground,True,5,plugin_skills,Plugin skills.
+{plugin_root}/commands,True,all,72,shadow,True,3,plugin_commands,Plugin flat markdown commands.
+{plugin_root}/agents,True,all,68,shadow,True,3,plugin_agents,Plugin agents.
+{plugin_root}/hooks/hooks.json,True,all,60,shadow,False,0,plugin_hooks,Plugin hooks.
+{plugin_root}/.mcp.json,True,all,60,shadow,False,0,plugin_mcp,Plugin MCP configuration.
+{plugin_root}/.lsp.json,True,all,48,shadow,False,0,plugin_lsp,Plugin LSP configuration.
+{plugin_root}/monitors/monitors.json,True,all,42,shadow,False,0,plugin_monitors,Plugin monitors.
+{plugin_root}/settings.json,True,all,44,shadow,False,0,plugin_settings,Plugin default settings.
+{plugin_root}/bin,True,all,30,shadow,True,2,plugin_bin,Plugin executables; metadata only.
+/Library/Application Support/ClaudeCode/CLAUDE.md,True,macos,78,foreground,False,0,managed_memory,Organization-wide managed CLAUDE.md.
+/Library/Application Support/ClaudeCode/managed-settings.json,True,macos,78,foreground,False,0,managed_settings,Organization-wide file-based settings.
+/Library/Application Support/ClaudeCode/managed-mcp.json,True,macos,76,foreground,False,0,managed_mcp,Organization-wide MCP configuration.
+/Library/Application Support/ClaudeCode/managed-settings.d,True,macos,70,foreground,True,2,managed_settings_dropins,Managed settings fragments.
+/etc/claude-code/CLAUDE.md,True,linux,78,foreground,False,0,managed_memory,Organization-wide managed CLAUDE.md.
+/etc/claude-code/managed-settings.json,True,linux,78,foreground,False,0,managed_settings,Organization-wide file-based settings.
+/etc/claude-code/managed-mcp.json,True,linux,76,foreground,False,0,managed_mcp,Organization-wide MCP configuration.
+/etc/claude-code/managed-settings.d,True,linux,70,foreground,True,2,managed_settings_dropins,Managed settings fragments.
+C:/Program Files/ClaudeCode/CLAUDE.md,True,windows,78,foreground,False,0,managed_memory,Organization-wide managed CLAUDE.md.
+C:/Program Files/ClaudeCode/managed-settings.json,True,windows,78,foreground,False,0,managed_settings,Organization-wide file-based settings.
+C:/Program Files/ClaudeCode/managed-mcp.json,True,windows,76,foreground,False,0,managed_mcp,Organization-wide MCP configuration.
+C:/Program Files/ClaudeCode/managed-settings.d,True,windows,70,foreground,True,2,managed_settings_dropins,Managed settings fragments.
+~/Developer,True,all,52,shadow,True,5,developer_root,Common developer workspace root for low-budget shadow/project-marker scan.
+~/dev,True,all,50,shadow,True,5,developer_root,Common developer workspace root for low-budget shadow/project-marker scan.
+~/code,True,all,50,shadow,True,5,developer_root,Common developer workspace root for low-budget shadow/project-marker scan.
+~/Code,True,all,50,shadow,True,5,developer_root,Common developer workspace root for low-budget shadow/project-marker scan.
+~/src,True,all,48,shadow,True,5,developer_root,Common developer workspace root for low-budget shadow/project-marker scan.
+~/Projects,True,all,48,shadow,True,5,developer_root,Common developer workspace root for low-budget shadow/project-marker scan.
+~/projects,True,all,48,shadow,True,5,developer_root,Common developer workspace root for low-budget shadow/project-marker scan.
+~/work,True,all,46,shadow,True,5,developer_root,Common developer workspace root for low-budget shadow/project-marker scan.
+~/workspace,True,all,46,shadow,True,5,developer_root,Common developer workspace root for low-budget shadow/project-marker scan.
+~/Documents,True,all,36,shadow,True,5,developer_root,Common developer workspace root for low-budget shadow/project-marker scan.
+~/Desktop,True,all,30,shadow,True,5,developer_root,Common developer workspace root for low-budget shadow/project-marker scan.
+~/Downloads,True,all,18,shadow,True,5,developer_root,Common developer workspace root for low-budget shadow/project-marker scan.
+C:/Users/{username}/source,True,windows,48,shadow,True,5,developer_root,Common developer workspace root for low-budget shadow/project-marker scan.
+C:/Users/{username}/source/repos,True,windows,50,shadow,True,5,developer_root,Common developer workspace root for low-budget shadow/project-marker scan.
+C:/Users/{username}/Documents,True,windows,34,shadow,True,5,developer_root,Common developer workspace root for low-budget shadow/project-marker scan.
+C:/Users/{username}/Desktop,True,windows,28,shadow,True,5,developer_root,Common developer workspace root for low-budget shadow/project-marker scan.
+C:/Users/{username}/Downloads,True,windows,16,shadow,True,5,developer_root,Common developer workspace root for low-budget shadow/project-marker scan.
