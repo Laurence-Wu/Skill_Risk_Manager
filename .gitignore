@@ -1,8 +1,7 @@
 __pycache__/
 *.py[cod]
 .test_*/
-skill_manager/data/*.json
-skill_manager/logs/*.csv
-!skill_manager/data/.gitkeep
-!skill_manager/logs/.gitkeep
-
+public/data/*.json
+public/logs/*.csv
+!public/data/.gitkeep
+!public/logs/.gitkeep

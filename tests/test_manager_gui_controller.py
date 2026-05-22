@@ -4,8 +4,8 @@ import time
 import unittest
 from pathlib import Path
 
-from manager_GUI.core.backend_controller import BackendController
-from manager_GUI.core.events import (
+from ui.core.backend_controller import BackendController
+from ui.core.events import (
     CANDIDATE_STAGED,
     CONTINUATION_PROGRESS,
     CONTINUATION_STARTED,
@@ -13,17 +13,19 @@ from manager_GUI.core.events import (
     SNAPSHOT_COMMITTED,
     ScanEvent,
 )
-from manager_GUI.core.mock_controller import MockController
-from manager_GUI.core.record_mapping import candidate_from_backend_record, skill_from_backend_record
-from manager_GUI.core.state import AppState
-from manager_GUI.ui.tables import _effective_page_size, _logs_signature, _rows_signature
-from manager_GUI.ui.shell import NAV_ITEMS, security_label
-from manager_GUI.ui.views.logs import log_to_row
-from manager_GUI.ui.views.risk import risk_rows_from_state
-from manager_GUI.ui.views.scan import scan_toolbar_actions_for_status
-from manager_GUI.ui.views.skills import ranked_skill_rows
-from skill_manager.backend.models import ScanConfig, ScanEvent as BackendScanEvent, SkillRecord as BackendSkillRecord
-from skill_manager.storage.repository import Repository
+from ui.core.mock_controller import MockController
+from ui.core.record_mapping import candidate_from_backend_record, skill_from_backend_record
+from ui.core.state import AppState
+from ui.core.exporters import export_logs_to_csv, export_risk_report_to_csv, export_skills_to_csv
+from ui.core.table_rows import candidate_rows_for_bucket, filter_rows
+from ui.tables import _effective_page_size, _logs_signature, _rows_signature
+from ui.shell import NAV_ITEMS, security_label
+from ui.views.logs import log_to_row
+from ui.views.risk import risk_rows_from_state
+from ui.views.scan import scan_toolbar_actions_for_status
+from ui.views.skills import ranked_skill_rows
+from skill_risk_manager.backend.models import ScanConfig, ScanEvent as BackendScanEvent, SkillRecord as BackendSkillRecord
+from skill_risk_manager.storage.repository import Repository
 from tests.test_support import writable_temp_dir
 
 
@@ -104,7 +106,7 @@ class ManagerGuiControllerTests(unittest.TestCase):
             candidate = controller.get_state().candidates_snapshot
             self.assertEqual(candidate, [])
 
-            from manager_GUI.models import CandidateRecord
+            from ui.models import CandidateRecord
 
             staged = CandidateRecord(str(root / "candidate" / "SKILL.md"), "review", 0.7, "snapshot", "candidate")
             controller._state.candidates_snapshot.append(staged)  # noqa: SLF001 - seeds GUI state without scanning.
@@ -119,7 +121,7 @@ class ManagerGuiControllerTests(unittest.TestCase):
             self.assertEqual(opened_folders, [root])
 
     def test_backend_controller_exports_skills_and_risk_report(self) -> None:
-        from manager_GUI.models import CandidateRecord, SkillRecord
+        from ui.models import CandidateRecord, SkillRecord
 
         with writable_temp_dir() as root:
             controller = BackendController(
@@ -160,6 +162,24 @@ class ManagerGuiControllerTests(unittest.TestCase):
 
             self.assertIn("deploy", skills_path.read_text(encoding="utf-8"))
             self.assertIn("Secret reference", risk_path.read_text(encoding="utf-8"))
+
+    def test_exporter_helpers_write_expected_csv_headers(self) -> None:
+        from ui.models import LogEntry, SkillRecord
+
+        with writable_temp_dir() as root:
+            state = AppState()
+            state.confirmed_skills = [
+                SkillRecord("deploy", "project", "project_skill", "deploy.md", 0.9, "discovered", risk_level="high")
+            ]
+            state.logs = [LogEntry("info", "event", 1.0, "scan")]
+
+            logs_path = export_logs_to_csv(state.logs, root / "logs.csv")
+            skills_path = export_skills_to_csv(state.confirmed_skills, root / "skills.csv")
+            risk_path = export_risk_report_to_csv(state, root / "risk.csv")
+
+            self.assertTrue(logs_path.read_text(encoding="utf-8").startswith("timestamp,level,event_type,message"))
+            self.assertTrue(skills_path.read_text(encoding="utf-8").startswith("name,type,scope,confidence"))
+            self.assertTrue(risk_path.read_text(encoding="utf-8").startswith("record,score,level,categories"))
 
     def test_app_state_keeps_global_progress_and_counts_monotonic(self) -> None:
         state = AppState()
@@ -226,7 +246,7 @@ class ManagerGuiControllerTests(unittest.TestCase):
         self.assertEqual(candidate_record.top_finding, "Shell execution tool access detected.")
 
     def test_app_state_risk_counts_are_global(self) -> None:
-        from manager_GUI.models import CandidateRecord, SkillRecord
+        from ui.models import CandidateRecord, SkillRecord
 
         state = AppState()
         state.confirmed_skills = [
@@ -243,7 +263,7 @@ class ManagerGuiControllerTests(unittest.TestCase):
         self.assertEqual(state.risk_counts, {"critical": 1, "high": 1, "medium": 1, "low": 1})
 
     def test_candidate_actions_preserve_risk_metadata(self) -> None:
-        from manager_GUI.models import CandidateRecord
+        from ui.models import CandidateRecord
 
         state = AppState()
         candidate = CandidateRecord(
@@ -277,7 +297,7 @@ class ManagerGuiControllerTests(unittest.TestCase):
         self.assertNotEqual(_rows_signature(rows, None), _rows_signature(changed_rows, None))
 
     def test_lazy_log_signature_tracks_visible_limit(self) -> None:
-        from manager_GUI.models import LogEntry
+        from ui.models import LogEntry
 
         logs = [LogEntry("info", "message", 1.0)]
 
@@ -300,7 +320,7 @@ class ManagerGuiControllerTests(unittest.TestCase):
         )
 
     def test_risk_rows_include_all_global_records(self) -> None:
-        from manager_GUI.models import CandidateRecord, SkillRecord
+        from ui.models import CandidateRecord, SkillRecord
 
         state = AppState()
         state.confirmed_skills = [
@@ -319,7 +339,7 @@ class ManagerGuiControllerTests(unittest.TestCase):
         self.assertEqual({row["Source"] for row in rows}, {"Skills", "Snapshot", "Staged"})
 
     def test_skills_rank_by_risk_score_descending(self) -> None:
-        from manager_GUI.models import SkillRecord
+        from ui.models import SkillRecord
 
         rows = ranked_skill_rows(
             [
@@ -331,8 +351,30 @@ class ManagerGuiControllerTests(unittest.TestCase):
 
         self.assertEqual([row["Name"] for row in rows], ["critical", "high", "low"])
 
+    def test_shared_table_row_filters_and_candidate_bucket_rows(self) -> None:
+        from ui.models import CandidateRecord
+
+        state = AppState()
+        state.candidates_snapshot = [
+            CandidateRecord("safe.md", "review", 0.6, "snapshot", "candidate", risk_level="low")
+        ]
+        state.candidates_staged = [
+            CandidateRecord("danger.md", "review", 0.6, "staged", "candidate", risk_level="critical")
+        ]
+
+        rows = candidate_rows_for_bucket(state, "staged")
+        filtered = filter_rows(
+            rows,
+            query="danger",
+            search_keys=("Name", "Path"),
+            exact_filters=(("Risk", "Critical", "All Risks"),),
+        )
+
+        self.assertEqual(len(filtered), 1)
+        self.assertEqual(filtered[0]["Path"], "danger.md")
+
     def test_log_to_row_maps_table_columns_and_path(self) -> None:
-        from manager_GUI.models import LogEntry
+        from ui.models import LogEntry
 
         row = log_to_row(LogEntry("success", "Exported logs: C:\\tmp\\logs.csv", 1.0, "export"))
 

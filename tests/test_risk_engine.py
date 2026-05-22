@@ -3,8 +3,8 @@ from __future__ import annotations
 import unittest
 from pathlib import Path
 
-from skill_manager.backend.models import SkillRecord
-from risk_manager.engine import analyze_record, attach_risk
+from skill_risk_manager.backend.models import SkillRecord
+from skill_risk_manager.risk.engine import analyze_record, attach_risk
 
 
 class RiskEngineTests(unittest.TestCase):

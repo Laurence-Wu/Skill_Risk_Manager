@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from manager_GUI.ui.shell import MainWindow
-from manager_GUI.ui.theme import get_theme
+from ui.shell import MainWindow
+from ui.theme import get_theme
 
 
 def main() -> None:

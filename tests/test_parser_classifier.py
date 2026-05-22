@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import unittest
 
-from skill_manager.backend.classifier import classify_path
-from skill_manager.backend.parser import parse_frontmatter
+from skill_risk_manager.backend.classifier import classify_path
+from skill_risk_manager.backend.parser import parse_frontmatter
 from tests.test_support import writable_temp_dir
 
 

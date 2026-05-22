@@ -5,15 +5,16 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from skill_manager.backend import ScanService
-from skill_manager.backend.cache import file_hash
-from skill_manager.backend.fast_exit import FastExitTracker
-from skill_manager.backend.models import CancelToken, ScanConfig, ScanEvent, ScanTarget, SkillRecord
-from skill_manager.backend.scanner_utils import build_cache_record
-from skill_manager.backend.shadow_scanner import ShadowScanner
-from skill_manager.backend.stage1_scanner import Stage1Scanner
-from skill_manager.platform import get_platform_adapter
-from skill_manager.storage.repository import Repository
+from skill_risk_manager.backend import ScanService
+from skill_risk_manager.backend.cache import file_hash
+from skill_risk_manager.backend.fast_exit import FastExitTracker
+from skill_risk_manager.backend.models import CancelToken, ScanConfig, ScanEvent, ScanTarget, SkillRecord
+from skill_risk_manager.backend.scanner_utils import build_cache_record, cached_record_with_risk
+from skill_risk_manager.backend.shadow_scanner import ShadowScanner
+from skill_risk_manager.backend.stage1_scanner import Stage1Scanner
+from platform_manager import get_platform_adapter
+from skill_risk_manager.storage.repository import Repository
+from skill_risk_manager.risk.policy import load_policy
 from tests.test_support import writable_temp_dir
 
 
@@ -464,7 +465,7 @@ class ScannerTests(unittest.TestCase):
             config = ScanConfig(min_checked_count=1, min_elapsed_seconds=0, required_source_groups=set())
             Stage1Scanner(adapter, repository, config, queue.Queue[ScanEvent]()).run_foreground([target])
 
-            with patch("skill_manager.backend.stage1_scanner.parse_markdown_header") as parser_mock:
+            with patch("skill_risk_manager.backend.stage1_scanner.parse_markdown_header") as parser_mock:
                 parser_mock.side_effect = AssertionError("cache should avoid parsing unchanged files")
                 Stage1Scanner(adapter, repository, config, queue.Queue[ScanEvent]()).run_foreground([target])
 
@@ -515,6 +516,23 @@ class ScannerTests(unittest.TestCase):
             self.assertEqual(before_snapshot, after_snapshot)
             self.assertEqual(len(shadow_records), 1)
             self.assertEqual(shadow_records[0].record_type, "candidate")
+
+    def test_cached_record_with_risk_rescores_cached_classification(self) -> None:
+        record = SkillRecord(
+            "danger",
+            "candidate",
+            "project",
+            Path("danger.md"),
+            "candidate",
+            0.6,
+            0,
+            metadata={"description": "Run Bash and rm -rf temp files"},
+        )
+
+        rescored = cached_record_with_risk(record.to_dict(), load_policy("base"))
+
+        self.assertIn("risk", rescored.metadata)
+        self.assertGreaterEqual(rescored.metadata["risk"]["score"], 75)
 
     def test_shadow_scan_staged_candidates_include_risk(self) -> None:
         with writable_temp_dir() as root:

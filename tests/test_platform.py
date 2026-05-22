@@ -4,10 +4,10 @@ import os
 import unittest
 from pathlib import Path
 
-from skill_manager.backend.models import ScanTarget
-from skill_manager.platform import get_platform_adapter
-from skill_manager.platform.factory import get_platform_adapter as factory_get_platform_adapter
-from skill_manager.platform.profile_loader import load_platform_profile
+from skill_risk_manager.backend.models import ScanTarget
+from platform_manager import get_platform_adapter
+from platform_manager.factory import get_platform_adapter as factory_get_platform_adapter
+from platform_manager.profile_loader import load_platform_profile
 from tests.test_support import writable_temp_dir
 
 

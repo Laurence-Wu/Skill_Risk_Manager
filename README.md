@@ -84,8 +84,8 @@ The important separation is:
 
 | Result Type | Meaning | Storage |
 |---|---|---|
-| **Committed Snapshot** | Stable, trusted scan results. | `skill_manager/data/stage1_snapshot.json` |
-| **Shadow Candidates** | Uncertain or deferred findings requiring review. | `skill_manager/data/stage1_shadow_pool.json` |
+| **Committed Snapshot** | Stable, trusted scan results. | `public/data/stage1_snapshot.json` |
+| **Shadow Candidates** | Uncertain or deferred findings requiring review. | `public/data/stage1_shadow_pool.json` |
 
 ---
 
@@ -128,28 +128,29 @@ Use **Base** for normal scans. Use **Advanced** when you want deeper discovery a
 ```text
 Skill_Risk_Manager/
 ├── manager_GUI/
-│   ├── app.py
+│   └── app.py
+│
+├── ui/
+│   ├── components.py
+│   ├── shell.py
+│   ├── tables.py
+│   ├── theme.py
 │   ├── core/
 │   │   ├── backend_controller.py
 │   │   ├── events.py
 │   │   ├── progress.py
 │   │   ├── record_mapping.py
 │   │   └── state.py
-│   └── ui/
-│       ├── components.py
-│       ├── shell.py
-│       ├── tables.py
-│       ├── theme.py
-│       └── views/
-│           ├── dashboard.py
-│           ├── scan.py
-│           ├── skills.py
-│           ├── candidates.py
-│           ├── risk.py
-│           ├── config.py
-│           └── logs.py
+│   └── views/
+│       ├── dashboard.py
+│       ├── scan.py
+│       ├── skills.py
+│       ├── candidates.py
+│       ├── risk.py
+│       ├── config.py
+│       └── logs.py
 │
-├── skill_manager/
+├── skill_risk_manager/
 │   ├── backend/
 │   │   ├── scan_service.py
 │   │   ├── stage1_scanner.py
@@ -157,21 +158,31 @@ Skill_Risk_Manager/
 │   │   ├── classifier.py
 │   │   ├── parser.py
 │   │   └── cache.py
-│   ├── config/
-│   │   └── platforms/
-│   ├── data/
-│   ├── logs/
-│   ├── platform/
+│   ├── cli/
+│   ├── risk/
+│   │   ├── engine.py
+│   │   ├── extractors.py
+│   │   ├── models.py
+│   │   ├── policy.py
+│   │   ├── reporter.py
+│   │   └── rules.py
 │   └── storage/
 │
-├── risk_manager/
-│   ├── engine.py
-│   ├── extractors.py
-│   ├── models.py
-│   ├── policy.py
-│   ├── reporter.py
-│   ├── rules.py
-│   └── presets/
+├── platform_manager/
+│   ├── base.py
+│   ├── factory.py
+│   ├── linux.py
+│   ├── macos.py
+│   └── windows.py
+│
+├── config/
+│   ├── skill_manager/
+│   ├── risk_manager/
+│   └── platforms/
+│
+├── public/
+│   ├── data/
+│   └── logs/
 │
 ├── tests/
 ├── requirements.txt
@@ -186,20 +197,20 @@ Skill_Risk_Manager/
 CustomTkinter UI
       │
       ▼
-manager_GUI.core.BackendController
+ui.core.BackendController
       │
       ├── Worker thread
       ├── Thread-safe event queue
       └── UI event conversion
       │
       ▼
-skill_manager.backend.ScanService
+skill_risk_manager.backend.ScanService
       │
       ├── Stage1Scanner      → stable foreground snapshot
       └── ShadowScanner      → staged continuation candidates
       │
       ▼
-risk_manager.attach_risk
+skill_risk_manager.risk.attach_risk
       │
       ├── Extract record metadata and body text
       ├── Apply deterministic risk rules
@@ -207,8 +218,8 @@ risk_manager.attach_risk
       │
       ▼
 Local repository storage
-      ├── data/*.json
-      └── logs/*.csv
+      ├── public/data/*.json
+      └── public/logs/*.csv
 ```
 
 The GUI does not directly mutate Tk widgets from scanner threads. Backend scan events are converted into UI-safe events and consumed by the visible view during periodic polling.
@@ -237,7 +248,7 @@ From the project root:
 python -m manager_GUI.app
 ```
 
-This is the only GUI entry point. The `skill_manager` package remains backend/CLI-only.
+This is the only GUI entry point. The `ui` package owns the interface modules; `skill_risk_manager` owns backend, risk, storage, and CLI code.
 
 ---
 
@@ -246,16 +257,16 @@ This is the only GUI entry point. The `skill_manager` package remains backend/CL
 The backend scanner CLI is still available:
 
 ```powershell
-python -m skill_manager scan --stage1
-python -m skill_manager list
-python -m skill_manager export-report .\report
+python -m skill_risk_manager scan --stage1
+python -m skill_risk_manager list
+python -m skill_risk_manager export-report .\report
 ```
 
 To override the Claude config root:
 
 ```powershell
 $env:CLAUDE_CONFIG_DIR="C:\path\to\.claude"
-python -m skill_manager scan --stage1
+python -m skill_risk_manager scan --stage1
 ```
 
 ---
@@ -264,12 +275,12 @@ python -m skill_manager scan --stage1
 
 | File | Purpose |
 |---|---|
-| `skill_manager/data/stage1_snapshot.json` | Committed foreground scan results. |
-| `skill_manager/data/stage1_shadow_pool.json` | Staged continuation findings. |
-| `skill_manager/data/stage1_summary.json` | Scan summary and counters. |
-| `skill_manager/data/scan_cache.json` | File stat/hash classification cache. |
-| `skill_manager/logs/stage1_scan_log.csv` | Scan lifecycle events. |
-| `skill_manager/logs/stage1_error_log.csv` | Permission and filesystem warnings. |
+| `public/data/stage1_snapshot.json` | Committed foreground scan results. |
+| `public/data/stage1_shadow_pool.json` | Staged continuation findings. |
+| `public/data/stage1_summary.json` | Scan summary and counters. |
+| `public/data/scan_cache.json` | File stat/hash classification cache. |
+| `public/logs/stage1_scan_log.csv` | Scan lifecycle events. |
+| `public/logs/stage1_error_log.csv` | Permission and filesystem warnings. |
 
 ---
 
@@ -278,13 +289,13 @@ python -m skill_manager scan --stage1
 Platform-specific behavior is isolated behind adapters in:
 
 ```text
-skill_manager/platform/
+platform_manager/
 ```
 
 Rich platform profiles live in:
 
 ```text
-skill_manager/config/platforms/
+config/platforms/
 ```
 
 This keeps OS-specific scan roots, path formatting, hard-ignore behavior, and folder-opening behavior separated from the scanner and UI layers.
@@ -302,14 +313,14 @@ python -B -m unittest discover -v
 Optional syntax check:
 
 ```powershell
-python -B -m compileall -q manager_GUI risk_manager skill_manager tests
+python -B -m compileall -q manager_GUI ui platform_manager skill_risk_manager tests
 ```
 
 ---
 
 ## Current Status
 
-The desktop app is connected to the Stage 1 scanner through `manager_GUI.core.BackendController`.
+The desktop app is connected to the Stage 1 scanner through `ui.core.BackendController`.
 
 Implemented behavior includes:
 

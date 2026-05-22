@@ -4,7 +4,12 @@
 
 ### What a Skill Is
 
-A Claude Code skill is a Markdown file named **`SKILL.md`** with a YAML frontmatter block at the top. The frontmatter tells Claude when and how to invoke the skill. A minimal skill looks like:
+A Claude Code skill is a Markdown file named **`SKILL.md`** with a YAML frontmatter block at the top. The frontmatter tells Claude when and how to invoke the skill. To be certain of a file that is a skill, we need to scan for the YAML frontmatter block at the top.
+
+
+
+
+ A minimal skill looks like:
 
 ```markdown
 ---
@@ -15,11 +20,11 @@ description: Does X when the user asks about Y.
 Detailed instructions here.
 ```
 
-The scanner (in `skill_manager/backend/parser.py`) reads only the first 8 KB / 100 lines of each file, parses the `---`-delimited YAML block, and confirms a skill is real if it contains both a `name:` field and at least one of `description:` or `summary:`.
+The scanner (in `skill_risk_manager/backend/parser.py`) reads only the first 8 KB / 100 lines of each file, parses the `---`-delimited YAML block, and confirms a skill is real if it contains both a `name:` field and at least one of `description:` or `summary:`.
 
 ### Skill Locations and Their Scopes
 
-Skills can live in three scopes. The platform config (`skill_manager/config/platforms/windows.json` and its macOS/Linux equivalents) defines the exact paths:
+Skills can live in three scopes. The platform config (`config/platforms/windows.json` and its macOS/Linux equivalents) defines the exact paths:
 
 | Scope | Canonical path (Windows) | When it applies |
 |---|---|---|
@@ -30,7 +35,9 @@ Skills can live in three scopes. The platform config (`skill_manager/config/plat
 
 On macOS the managed path is `/Library/Application Support/ClaudeCode/` and on Linux it is `/etc/claude-code/`.
 
-The environment variable `CLAUDE_CONFIG_DIR` overrides the personal `~/.claude` root for all personal-scope paths. Always resolve this variable first before constructing any scan path (see `skill_manager/platform/base.py:claude_config_root`).
+The environment variable `CLAUDE_CONFIG_DIR` overrides the personal `~/.claude` root for all personal-scope paths. Always resolve this variable first before constructing any scan path (see `platform_manager/base.py:claude_config_root`).
+
+More possible locations are defined in the config folder.
 
 ### Optional Frontmatter Fields
 
@@ -68,7 +75,7 @@ The foreground scan (`scan_paths.csv`, phase = `foreground`) covers deterministi
 - **Project skills**: `{project_root}/.claude/skills/` — recursed up to depth 5  
 - **Managed org config** (read-only): `C:\Program Files\ClaudeCode\` / `/Library/Application Support/ClaudeCode/` / `/etc/claude-code/`  
 
-For each `.md` file found, `skill_manager/backend/parser.py` reads only the frontmatter. `skill_manager/backend/classifier.py` then assigns a `record_type` and `confidence` score:
+For each `.md` file found, `skill_risk_manager/backend/parser.py` reads only the frontmatter. `skill_risk_manager/backend/classifier.py` then assigns a `record_type` and `confidence` score:
 
 - Path matches `skills/<name>/SKILL.md` with valid frontmatter → **`personal_skill` or `project_skill`, confidence 0.99**  
 - Path matches `skills/<name>/SKILL.md` without valid frontmatter → **`candidate`, confidence 0.58**  
@@ -98,15 +105,4 @@ Before descending into any directory, the scanner checks `ignore_paths.csv`:
 
 ### Step 5 — Deduplicate and Store Results
 
-`skill_manager/backend/scanner_utils.py:deduplicate_records` collapses duplicates by the tuple `(normalized_path, name.lower(), scope, file_hash)`, keeping the record with the higher confidence score. Results are persisted via `skill_manager/storage/` (JSON or CSV store) and can be queried or exported for an org-wide inventory.
-
-### Summary Checklist for an Org Scan
-
-1. For each laptop, resolve `CLAUDE_CONFIG_DIR` or fall back to `~/.claude`.  
-2. Scan `{claude_config_root}/skills/` and `{claude_config_root}/plugins/` (foreground).  
-3. Scan any open project's `.claude/skills/` subtree (foreground).  
-4. Read the managed config directory for org-pushed skills and settings.  
-5. Run shadow scan across developer root candidates, guided by project markers.  
-6. Skip all paths listed in `ignore_paths.csv`; never read credential or transcript files without explicit opt-in.  
-7. For each `.md` hit, parse the frontmatter and classify with confidence scoring.  
-8. Deduplicate by `(path_key, name, scope, hash)` and export the final inventory.
+`skill_risk_manager/backend/scanner_utils.py:deduplicate_records` collapses duplicates by the tuple `(normalized_path, name.lower(), scope, file_hash)`, keeping the record with the higher confidence score. Results are persisted via `skill_risk_manager/storage/` (JSON or CSV store) and can be queried or exported for an org-wide inventory.

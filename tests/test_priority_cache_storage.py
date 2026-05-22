@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import unittest
 
-from skill_manager.backend.cache import cache_metadata, file_hash, stat_matches_cache
-from skill_manager.backend.models import ScanEvent, ScanTarget
-from skill_manager.backend.priority_queue import ScanPriorityQueue
-from skill_manager.storage.repository import Repository
+from skill_risk_manager.backend.cache import cache_metadata, file_hash, stat_matches_cache
+from skill_risk_manager.backend.models import ScanEvent, ScanTarget
+from skill_risk_manager.backend.priority_queue import ScanPriorityQueue
+from skill_risk_manager.storage.repository import Repository
 from tests.test_support import writable_temp_dir
 
 
