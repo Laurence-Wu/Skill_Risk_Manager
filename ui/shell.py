@@ -54,7 +54,7 @@ class MainWindow(ctk.CTk):
         self._refresh_pending = False
 
         self.title("Skill Risk Manager")
-        self.geometry("1280x800")
+        self.geometry("1360x840")
         self.minsize(1100, 720)
         self.configure(fg_color=self.theme.color("app_bg"))
         self.grid_rowconfigure(1, weight=1)
@@ -78,26 +78,60 @@ class MainWindow(ctk.CTk):
         self.views[key].refresh(self.controller.get_state())
 
     def _build_topbar(self) -> None:
-        self.topbar = ctk.CTkFrame(self, fg_color=self.theme.color("shell_bg"), corner_radius=0, height=self.theme.spacing("topbar_height"))
+        self.topbar = ctk.CTkFrame(
+            self,
+            fg_color=self.theme.color("shell_bg"),
+            corner_radius=0,
+            height=self.theme.spacing("topbar_height"),
+            border_color=self.theme.color("border"),
+            border_width=1,
+        )
         self.topbar.grid(row=0, column=0, columnspan=2, sticky="ew")
+        self.topbar.grid_propagate(False)
         self.topbar.grid_columnconfigure(0, weight=1)
+        title_frame = ctk.CTkFrame(self.topbar, fg_color="transparent")
+        title_frame.grid(row=0, column=0, sticky="w", padx=18, pady=9)
         ctk.CTkLabel(
-            self.topbar,
+            title_frame,
+            text="[<>]",
+            font=self.theme.font("section_title"),
+            text_color=self.theme.color("accent_primary"),
+            width=46,
+            height=44,
+            fg_color=self.theme.color("surface_raised"),
+            corner_radius=12,
+        ).grid(row=0, column=0, rowspan=2, sticky="w", padx=(0, 12))
+        ctk.CTkLabel(
+            title_frame,
             text="Skill Risk Manager",
             font=self.theme.font("section_title"),
             text_color=self.theme.color("text_primary"),
             anchor="w",
-        ).grid(row=0, column=0, sticky="w", padx=16, pady=13)
+        ).grid(row=0, column=1, sticky="w")
+        ctk.CTkLabel(
+            title_frame,
+            text="Local discovery, risk review, stable snapshots",
+            font=self.theme.font("caption"),
+            text_color=self.theme.color("text_muted"),
+            anchor="w",
+        ).grid(row=1, column=1, sticky="w")
         state = self.controller.get_state()
         self.platform_badge = StatusBadge(self.topbar, state.platform, "ready")
-        self.platform_badge.grid(row=0, column=1, padx=(8, 8), pady=13)
+        self.platform_badge.grid(row=0, column=1, padx=(8, 8), pady=18)
         self.status_badge = StatusBadge(self.topbar, "Ready", "ready")
-        self.status_badge.grid(row=0, column=2, padx=(0, 16), pady=13)
+        self.status_badge.grid(row=0, column=2, padx=(0, 8), pady=18)
         self.security_badge = StatusBadge(self.topbar, security_label(state.security_level), "ready")
-        self.security_badge.grid(row=0, column=3, padx=(0, 16), pady=13)
+        self.security_badge.grid(row=0, column=3, padx=(0, 18), pady=18)
 
     def _build_sidebar(self) -> None:
-        self.sidebar = ctk.CTkFrame(self, fg_color=self.theme.color("nav_bg"), corner_radius=0, width=self.theme.spacing("sidebar_width"))
+        self.sidebar = ctk.CTkFrame(
+            self,
+            fg_color=self.theme.color("nav_bg"),
+            corner_radius=0,
+            width=self.theme.spacing("sidebar_width"),
+            border_color=self.theme.color("border"),
+            border_width=1,
+        )
         self.sidebar.grid(row=1, column=0, sticky="nsw")
         self.sidebar.grid_propagate(False)
         self.sidebar.grid_columnconfigure(0, weight=1)
