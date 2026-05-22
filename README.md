@@ -17,8 +17,23 @@
 </p>
 
 </div>
+# Background information
 
-# What it does
+## In one sentence of what skill is
+skill is a plug and play guideline that LLM can read a small amount of metadata and utilize that to further include more instructions from the skill to prevent context window overhead.
+
+## How to locate the skill
+
+Essentially a skill is just file, so theoratically it can appear anywhere on the computer
+To confirm the skill's position, we have the following criteria: 
+- the file is named `SKILL.md`,
+- it lives under a `skills/<skill-name>/` folder,
+- its frontmatter starts and ends with `---`,
+- it has a `name`, and
+- it has either a `description` or a `summary`.
+
+
+# What the repo does
 
    Skill Risk Manager is a completely local Python desktop application for discovering and reviewing Claude Code skills across Windows, macOS, and Linux. It scans the local machine for Claude-related skills, commands, plugin files, and configuration files, separates high-confidence records from uncertain findings, attaches risk metadata, and provides a review workflow before questionable candidates are trusted or promoted.
 
