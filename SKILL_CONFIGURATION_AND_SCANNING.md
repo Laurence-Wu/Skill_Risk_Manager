@@ -40,7 +40,7 @@ Skills can be personal, project-local, plugin-provided, or managed by an organiz
 
 On macOS, the managed location is `/Library/Application Support/ClaudeCode/`. On Linux, it is `/etc/claude-code/`.
 
-The `CLAUDE_CONFIG_DIR` environment variable overrides the normal `~/.claude` root. The platform adapter resolves that value before building scan paths.
+The `CLAUDE_CONFIG_DIR` environment variable overrides the normal `~/.claude` root. The platform adapter resolves that value before building scan paths. For more comprehensive path list, find that under configura
 
 ### Useful Frontmatter Fields
 
@@ -93,23 +93,41 @@ Base mode respects hard-ignore paths. Advanced mode attempts protected paths too
 
 ### 2. Run the Foreground Scanner
 
-`Stage1Scanner.run_foreground()` uses a priority queue, so high-confidence locations are scanned first.
+`Stage1Scanner.run_foreground()` is the main discovery algorithm. Its job is to find the most trustworthy records first, save a stable snapshot, and leave noisy work for the continuation scanner.
 
-The foreground scanner:
+The foreground scanner uses these strategies:
 
-1. loads the classification cache,
-2. pops the highest-priority target,
-3. skips generated folders, symlinks, and hard-ignored paths,
-4. walks directories with an explicit stack and a max depth,
-5. scans high-value files immediately,
-6. defers low-confidence `.md` and `.json` files to continuation,
-7. classifies each scanned file,
-8. attaches risk metadata,
-9. emits progress events for the GUI,
-10. deduplicates records,
-11. saves the stable snapshot.
+| Strategy | How it works |
+|---|---|
+| Priority-first scanning | Targets are pushed into `ScanPriorityQueue`; higher-priority paths are scanned before lower-priority paths. Ties keep insertion order. |
+| Required source coverage | The scanner tracks required source groups: personal, project, parent project, plugin, and command. It does not early-exit until those groups have been attempted. |
+| Safe skipping | Generated folders, test temp folders, symlinks, and hard-ignored platform paths are skipped before traversal. |
+| Stack traversal | Directories are walked with an explicit stack instead of recursion, so depth limits are easy to enforce. |
+| High-signal first | Entries named `.claude`, `skills`, `plugins`, `commands`, and `agents` are sorted ahead of ordinary folders. |
+| Immediate file scan | High-value files are parsed during foreground discovery because they are likely to contain real Claude records. |
+| Deferred noise | Low-confidence `.md` and `.json` files are not parsed immediately. They are converted into continuation targets. |
+| Cache reuse | If file stat or hash data still matches, the previous classification is reused and risk is re-scored. |
+| Progress events | Each target and scanned file emits progress data for the GUI: current path, counts, potential records, and errors. |
+| Fast exit | Once required groups are covered, the scanner exits when recent discoveries drop below the configured discovery-rate threshold. |
+| Stable commit | Records are deduplicated, sorted by confidence, saved to the snapshot, and only then shown as committed results. |
 
-High-value files include:
+At a high level, the foreground loop is:
+
+```text
+load cache
+build priority queue
+while targets remain:
+    stop if cancelled
+    pop highest-priority target
+    move low-priority targets to continuation
+    scan files or directories under that target
+    stop early if required groups are covered and discovery rate drops
+dedupe records
+save snapshot, summary, cache, and scan log
+emit "results ready"
+```
+
+High-value files are scanned immediately:
 
 - `SKILL.md`,
 - `CLAUDE.md`,
@@ -119,7 +137,12 @@ High-value files include:
 - `.mcp.json`,
 - `.claude.json`.
 
-High-value folders include `.claude`, `skills`, `plugins`, `commands`, and `agents`.
+High-value folders are visited first: `.claude`, `skills`, `plugins`, `commands`, and `agents`.
+
+There are two directory modes:
+
+- `skill_inventory` targets only look for `SKILL.md` files under skill/plugin trees.
+- Normal foreground targets scan config files, command Markdown, metadata Markdown in high-value folders, and defer lower-signal candidates.
 
 ### 3. Reuse Cache When Possible
 
