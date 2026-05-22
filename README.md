@@ -17,7 +17,6 @@
 </p>
 
 </div>
-# Background information
 
 ## In one sentence of what skill is
 skill is a plug and play guideline that LLM can read a small amount of metadata and utilize that to further include more instructions from the skill to prevent context window overhead.
