@@ -27,6 +27,8 @@ from skill_manager.backend.scanner_utils import (
 )
 from skill_manager.platform.base import PlatformAdapter
 from skill_manager.storage.repository import Repository
+from risk_manager.engine import attach_risk
+from risk_manager.policy import load_policy
 
 
 HIGH_VALUE_FILENAMES = {
@@ -60,6 +62,7 @@ class Stage1Scanner:
         self.directories_checked = 0
         self.errors = 0
         self.visited_directories: set[str] = set()
+        self.risk_policy = load_policy(self.config.risk_preset)
 
     def run_foreground(
         self,
@@ -329,13 +332,14 @@ class Stage1Scanner:
         if stat_matches_cache(path, cache_record):
             raw_cached_classification = cached_classification(cache_record)
             if raw_cached_classification:
-                return SkillRecord.from_dict(raw_cached_classification)
+                return attach_risk(SkillRecord.from_dict(raw_cached_classification), self.risk_policy)
 
         computed_hash = file_hash(path) if high_value else None
         if computed_hash and cache_record and computed_hash == cache_record.get("hash"):
             raw_cached_classification = cached_classification(cache_record)
             if raw_cached_classification:
                 cached_record = SkillRecord.from_dict(raw_cached_classification)
+                cached_record = attach_risk(cached_record, self.risk_policy)
                 self.cache_updates[key] = build_cache_record(path, computed_hash, cached_record)
                 return cached_record
 
@@ -365,6 +369,7 @@ class Stage1Scanner:
                 file_hash=computed_hash,
                 metadata=classification.metadata,
             )
+            record = attach_risk(record, self.risk_policy)
 
         self.cache_updates[key] = build_cache_record(path, computed_hash, record)
         return record

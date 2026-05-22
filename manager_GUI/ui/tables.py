@@ -23,6 +23,7 @@ class BaseTable(BaseComponent, ctk.CTkScrollableFrame):
         self.empty_text = empty_text
         self.selected_row: int | None = None
         self.row_frames: list[ctk.CTkFrame] = []
+        self.row_kinds: list[str] = []
         self._rows: list[dict[str, object]] = []
         self._actions: list[TableAction] | None = None
         self._page_size = 90
@@ -37,8 +38,10 @@ class BaseTable(BaseComponent, ctk.CTkScrollableFrame):
         *,
         page_size: int = 90,
         preserve_visible_limit: bool = False,
+        lazy: bool = False,
     ) -> None:
-        signature = _rows_signature(rows, actions)
+        page_size = _effective_page_size(page_size, lazy)
+        signature = _rows_signature(rows, actions, page_size)
         if signature == self._last_signature and self.winfo_children():
             return
         self._update_paging(rows, actions, signature, page_size, preserve_visible_limit)
@@ -63,7 +66,7 @@ class BaseTable(BaseComponent, ctk.CTkScrollableFrame):
     ) -> None:
         if preserve_visible_limit:
             self._visible_limit = max(self._visible_limit, page_size)
-        elif self._last_signature and signature[1:] == self._last_signature[1:]:
+        elif self._last_signature and signature == self._last_signature:
             self._visible_limit = min(max(self._visible_limit, page_size), max(len(rows), page_size))
         else:
             self._visible_limit = page_size
@@ -76,6 +79,7 @@ class BaseTable(BaseComponent, ctk.CTkScrollableFrame):
         for child in self.winfo_children():
             child.destroy()
         self.row_frames = []
+        self.row_kinds = []
         self.selected_row = None
 
     def _total_columns(self, actions: list["TableAction"] | None) -> int:
@@ -119,17 +123,18 @@ class BaseTable(BaseComponent, ctk.CTkScrollableFrame):
         total_columns: int,
     ) -> None:
         for row_index, row in enumerate(rows, start=1):
-            row_frame = self._new_row_frame(row_index, total_columns)
+            row_frame = self._new_row_frame(row, row_index, total_columns)
             self._render_row_cells(row_frame, row, row_index)
             if actions:
                 self._render_row_actions(row_frame, row, actions)
 
-    def _new_row_frame(self, row_index: int, total_columns: int) -> ctk.CTkFrame:
-        row_bg = self.theme.color("surface_raised") if row_index % 2 else self.theme.color("surface")
+    def _new_row_frame(self, row: dict[str, object], row_index: int, total_columns: int) -> ctk.CTkFrame:
+        row_bg = self._row_background(row, row_index)
         row_frame = ctk.CTkFrame(self, fg_color=row_bg, corner_radius=0, height=self.theme.spacing("table_row_height"))
         row_frame.grid(row=row_index, column=0, columnspan=total_columns, sticky="ew", padx=5, pady=1)
         row_frame.grid_columnconfigure(0, weight=1)
         self.row_frames.append(row_frame)
+        self.row_kinds.append(str(row.get("_row_kind", "")).lower())
         row_frame.bind("<Button-1>", lambda _event, index=row_index - 1: self._select_row(index))
         return row_frame
 
@@ -188,10 +193,16 @@ class BaseTable(BaseComponent, ctk.CTkScrollableFrame):
             frame.configure(
                 fg_color=self.theme.color("surface_selected")
                 if row_index == index
-                else self.theme.color("surface_raised")
-                if row_index % 2 == 0
-                else self.theme.color("surface")
+                else self._row_background({"_row_kind": self.row_kinds[row_index]}, row_index + 1)
             )
+
+    def _row_background(self, row: dict[str, object], row_index: int) -> str:
+        row_kind = str(row.get("_row_kind", "")).lower()
+        if row_kind == "critical":
+            return "#3A1F2A"
+        if row_kind == "high":
+            return "#3A2C1F"
+        return self.theme.color("surface_raised") if row_index % 2 else self.theme.color("surface")
 
 
 class LogPanel(BaseComponent, ctk.CTkScrollableFrame):
@@ -207,8 +218,9 @@ class LogPanel(BaseComponent, ctk.CTkScrollableFrame):
         self.grid_columnconfigure(0, weight=1)
         self._last_signature: tuple | None = None
 
-    def set_logs(self, logs: list[LogEntry], level_filter: str = "all") -> None:
-        signature = _logs_signature(logs, level_filter)
+    def set_logs(self, logs: list[LogEntry], level_filter: str = "all", *, lazy: bool = False) -> None:
+        visible_limit = 50 if lazy else 120
+        signature = _logs_signature(logs, level_filter, visible_limit)
         if signature == self._last_signature and self.winfo_children():
             return
         self._last_signature = signature
@@ -218,7 +230,7 @@ class LogPanel(BaseComponent, ctk.CTkScrollableFrame):
         if not visible_logs:
             self._render_empty()
             return
-        for row_index, log in enumerate(visible_logs[-120:]):
+        for row_index, log in enumerate(visible_logs[-visible_limit:]):
             self._render_log(row_index, log)
 
     def _render_empty(self) -> None:
@@ -260,21 +272,41 @@ def _truncate(value: str, max_length: int) -> str:
     return value[: max_length - 3] + "..."
 
 
-def _rows_signature(rows: list[dict[str, object]], actions: list[TableAction] | None) -> tuple:
+def _rows_signature(
+    rows: list[dict[str, object]],
+    actions: list[TableAction] | None,
+    page_size: int | None = None,
+) -> tuple:
     row_count = len(rows)
     sample_rows = rows[:3] + rows[-3:] if row_count > 6 else rows
     sample_keys = tuple(_row_key(row) for row in sample_rows)
     action_keys = tuple(f"{label}:{variant}" for label, _callback, variant in actions or [])
-    return (row_count, sample_keys, action_keys)
+    return (page_size, row_count, sample_keys, action_keys)
 
 
 def _row_key(row: dict[str, object]) -> str:
-    return str(row.get("Path") or row.get("Name") or row.get("_record") or "")
+    return "|".join(
+        [
+            str(row.get("Path") or row.get("Name") or row.get("_record") or ""),
+            str(row.get("Risk", "")),
+            str(row.get("Score", "")),
+            str(row.get("Status", "")),
+            str(row.get("Action", "")),
+            str(row.get("Top Finding", "")),
+            str(row.get("Summary", "")),
+        ]
+    )
 
 
-def _logs_signature(logs: list[LogEntry], level_filter: str) -> tuple:
+def _logs_signature(logs: list[LogEntry], level_filter: str, visible_limit: int = 120) -> tuple:
     visible_logs = [log for log in logs if level_filter == "all" or log.level == level_filter]
     if not visible_logs:
-        return (level_filter, 0)
+        return (level_filter, visible_limit, 0)
     last_log = visible_logs[-1]
-    return (level_filter, len(visible_logs), last_log.timestamp, last_log.level, last_log.message)
+    return (level_filter, visible_limit, len(visible_logs), last_log.timestamp, last_log.level, last_log.message)
+
+
+def _effective_page_size(page_size: int, lazy: bool) -> int:
+    if not lazy:
+        return page_size
+    return max(20, min(page_size, 40))

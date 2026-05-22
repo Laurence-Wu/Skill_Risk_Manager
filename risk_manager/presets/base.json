@@ -1,0 +1,14 @@
+{
+  "enable_body_scan": true,
+  "enable_frontmatter_scan": true,
+  "enable_config_scan": true,
+  "max_file_chars": 80000,
+  "critical_threshold": 75,
+  "high_threshold": 45,
+  "medium_threshold": 20,
+  "combo_bonuses": {
+    "secrets+network": 20,
+    "command_execution+filesystem": 15,
+    "command_execution+network": 15
+  }
+}

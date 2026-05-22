@@ -12,12 +12,14 @@ from manager_GUI.ui.views.candidates import CandidatesView
 from manager_GUI.ui.views.config import ConfigView
 from manager_GUI.ui.views.dashboard import DashboardView
 from manager_GUI.ui.views.logs import LogsView
+from manager_GUI.ui.views.risk import RiskView
 from manager_GUI.ui.views.scan import ScanView
 from manager_GUI.ui.views.skills import SkillsView
 
 
 POLL_INTERVAL_MS = 50
 REFRESH_INTERVAL_SECONDS = 0.16
+LAZY_REFRESH_INTERVAL_SECONDS = 0.35
 MAX_BACKEND_EVENTS_PER_TICK = 240
 MAX_UI_EVENTS_PER_TICK = 160
 IMMEDIATE_REFRESH_EVENTS = {
@@ -30,6 +32,15 @@ IMMEDIATE_REFRESH_EVENTS = {
     "scan_completed",
     "scan_error",
 }
+NAV_ITEMS = [
+    ("Dashboard", "dashboard"),
+    ("Scan", "scan"),
+    ("Skills", "skills"),
+    ("Candidates", "candidates"),
+    ("Risk", "risk"),
+    ("Config", "config"),
+    ("Logs", "logs"),
+]
 
 
 class MainWindow(ctk.CTk):
@@ -82,6 +93,8 @@ class MainWindow(ctk.CTk):
         self.platform_badge.grid(row=0, column=1, padx=(8, 8), pady=13)
         self.status_badge = StatusBadge(self.topbar, "Ready", "ready")
         self.status_badge.grid(row=0, column=2, padx=(0, 16), pady=13)
+        self.security_badge = StatusBadge(self.topbar, security_label(state.security_level), "ready")
+        self.security_badge.grid(row=0, column=3, padx=(0, 16), pady=13)
 
     def _build_sidebar(self) -> None:
         self.sidebar = ctk.CTkFrame(self, fg_color=self.theme.color("nav_bg"), corner_radius=0, width=self.theme.spacing("sidebar_width"))
@@ -110,12 +123,17 @@ class MainWindow(ctk.CTk):
             "clear_logs": self._clear_logs,
             "export_logs": self._export_logs,
             "open_logs_folder": self._open_logs_folder,
+            "export_skills": self._export_skills,
+            "export_risk_report": self._export_risk_report,
+            "save_config": self._save_config,
+            "refresh": self._refresh_all,
         }
         self.views = {
             "dashboard": DashboardView(self.content, actions),
             "scan": ScanView(self.content, actions),
             "skills": SkillsView(self.content, actions),
             "candidates": CandidatesView(self.content, actions),
+            "risk": RiskView(self.content, actions),
             "config": ConfigView(self.content, actions),
             "logs": LogsView(self.content, actions),
         }
@@ -126,15 +144,7 @@ class MainWindow(ctk.CTk):
     def _render_sidebar(self) -> None:
         for child in self.sidebar.winfo_children():
             child.destroy()
-        nav_items = [
-            ("Dashboard", "dashboard"),
-            ("Scan", "scan"),
-            ("Skills", "skills"),
-            ("Candidates", "candidates"),
-            ("Config", "config"),
-            ("Logs", "logs"),
-        ]
-        for row, (label, key) in enumerate(nav_items):
+        for row, (label, key) in enumerate(NAV_ITEMS):
             selected = key == self.active_view_key
             item = ctk.CTkFrame(
                 self.sidebar,
@@ -168,8 +178,10 @@ class MainWindow(ctk.CTk):
             self._refresh_pending = True
         now = time.monotonic()
         has_immediate_event = any(event.type in IMMEDIATE_REFRESH_EVENTS for event in events)
-        if self._refresh_pending and (has_immediate_event or now - self._last_refresh_at >= REFRESH_INTERVAL_SECONDS):
-            self._refresh_visible()
+        state = self.controller.get_state() if self._refresh_pending else None
+        refresh_interval = LAZY_REFRESH_INTERVAL_SECONDS if state and state.lazy_updates_enabled else REFRESH_INTERVAL_SECONDS
+        if self._refresh_pending and (has_immediate_event or now - self._last_refresh_at >= refresh_interval):
+            self._refresh_visible(state)
             self._last_refresh_at = now
             self._refresh_pending = False
         self.after(POLL_INTERVAL_MS, self._poll_controller)
@@ -177,12 +189,13 @@ class MainWindow(ctk.CTk):
     def _refresh_chrome(self, state: AppState) -> None:
         self.platform_badge.set_status(state.platform, "ready")
         self.status_badge.set_status(state.scan_status.title(), status_kind(state.scan_status))
+        self.security_badge.set_status(security_label(state.security_level), "warning" if state.security_level == "advanced" else "ready")
 
     def _refresh_all(self) -> None:
         self._refresh_visible()
 
-    def _refresh_visible(self) -> None:
-        state = self.controller.get_state()
+    def _refresh_visible(self, state: AppState | None = None) -> None:
+        state = state or self.controller.get_state()
         self._refresh_chrome(state)
         active_view = self.views.get(self.active_view_key)
         if active_view:
@@ -240,3 +253,19 @@ class MainWindow(ctk.CTk):
     def _open_logs_folder(self) -> None:
         self.controller.open_logs_folder()
         self._refresh_all()
+
+    def _export_skills(self) -> None:
+        self.controller.export_skills()
+        self._refresh_all()
+
+    def _export_risk_report(self) -> None:
+        self.controller.export_risk_report()
+        self._refresh_all()
+
+    def _save_config(self) -> None:
+        self.controller.save_config()
+        self._refresh_all()
+
+
+def security_label(security_level: str) -> str:
+    return "Advanced Mode" if security_level == "advanced" else "Base Mode"

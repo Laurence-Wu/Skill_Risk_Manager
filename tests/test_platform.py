@@ -51,6 +51,39 @@ class PlatformTests(unittest.TestCase):
                 self.assertTrue(profile.managed_config_paths)
                 self.assertTrue(profile.hard_ignored_roots)
 
+    def test_macos_and_linux_adapters_build_stage1_targets(self) -> None:
+        for platform_name in ["macos", "linux"]:
+            with self.subTest(platform_name=platform_name), writable_temp_dir() as root:
+                adapter = get_platform_adapter(platform_name)
+                previous_override = os.environ.get("CLAUDE_CONFIG_DIR")
+                os.environ["CLAUDE_CONFIG_DIR"] = str(root / ".claude")
+                try:
+                    targets = adapter.build_stage1_targets(root / "project")
+                    sources = {target.source_type for target in targets}
+                    scan_modes = {target.scan_mode for target in targets}
+
+                    self.assertIn("personal_skill", sources)
+                    self.assertIn("plugin_skill", sources)
+                    self.assertIn("legacy_command", sources)
+                    self.assertIn("claude_config", sources)
+                    self.assertIn("project_skill", sources)
+                    self.assertIn("skill_inventory", scan_modes)
+                    self.assertIn("foreground", scan_modes)
+                    self.assertGreaterEqual(adapter.minimum_window_size()[0], 1000)
+                    self.assertGreaterEqual(adapter.minimum_window_size()[1], 700)
+                finally:
+                    if previous_override is None:
+                        os.environ.pop("CLAUDE_CONFIG_DIR", None)
+                    else:
+                        os.environ["CLAUDE_CONFIG_DIR"] = previous_override
+
+    def test_macos_and_linux_hard_ignore_expected_roots(self) -> None:
+        macos_profile = load_platform_profile("macos")
+        linux_profile = load_platform_profile("linux")
+
+        self.assertIn("/System", macos_profile.hard_ignored_roots)
+        self.assertIn("/proc", linux_profile.hard_ignored_roots)
+
     def test_claude_config_override_builds_stage1_targets(self) -> None:
         adapter = get_platform_adapter()
         with writable_temp_dir() as temporary_path:

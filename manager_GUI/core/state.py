@@ -64,6 +64,14 @@ class AppState:
     def config_count(self) -> int:
         return len(self.config_files)
 
+    @property
+    def risk_counts(self) -> dict[str, int]:
+        counts = {"critical": 0, "high": 0, "medium": 0, "low": 0}
+        for record in [*self.confirmed_skills, *self.candidates_snapshot, *self.candidates_staged]:
+            level = getattr(record, "risk_level", "low")
+            counts[level if level in counts else "low"] += 1
+        return counts
+
     def apply_event(self, event: ScanEvent) -> None:
         if _should_log_event(self, event):
             self.add_log(_level_for_event(event), event.message, event.type, event.timestamp)
@@ -207,6 +215,12 @@ class AppState:
                 confidence=candidate.confidence,
                 status="valid",
                 description=candidate.reason,
+                risk_score=candidate.risk_score,
+                risk_level=candidate.risk_level,
+                risk_summary=candidate.risk_summary,
+                risk_categories=candidate.risk_categories,
+                top_finding=candidate.top_finding,
+                suggested_action=candidate.suggested_action,
             )
         )
         self.add_log("success", f"Promoted candidate: {name}")
@@ -221,6 +235,12 @@ class AppState:
             source=candidate.source,
             suggested_type=candidate.suggested_type,
             status="ignored",
+            risk_score=candidate.risk_score,
+            risk_level=candidate.risk_level,
+            risk_summary=candidate.risk_summary,
+            risk_categories=candidate.risk_categories,
+            top_finding=candidate.top_finding,
+            suggested_action=candidate.suggested_action,
         )
         self.ignored_candidates.append(ignored)
         self.add_log("warning", f"Ignored candidate: {candidate.path}")

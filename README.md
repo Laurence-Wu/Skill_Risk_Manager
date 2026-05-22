@@ -53,7 +53,7 @@ Claude Code skills can live across global config folders, project-local director
 | **Local skill discovery** | Scans Claude-related paths, skill directories, command files, config files, and project-level skill artifacts. |
 | **Stable snapshot management** | Writes high-confidence foreground results into a committed Stage 1 snapshot. |
 | **Candidate staging** | Sends lower-confidence findings into a shadow candidate pool instead of treating them as trusted immediately. |
-| **Risk-aware review workflow** | Lets users inspect staged candidates before promotion or rejection. |
+| **Risk-aware review workflow** | Scores discovered records, explains findings, and lets users inspect staged candidates before promotion or rejection. |
 | **Responsive desktop UI** | Uses a worker thread and event queue so scans do not freeze the CustomTkinter interface. |
 | **Cross-platform scanning** | Uses platform adapters for Windows, macOS, and Linux scan behavior. |
 | **Local-first privacy model** | Runs on the local machine and stores scan artifacts locally. |
@@ -99,6 +99,7 @@ The desktop app is organized around six major views:
 | **Scan** | Foreground and continuation scan progress. |
 | **Skills** | Stable committed skill records. |
 | **Candidates** | Staged findings awaiting review. |
+| **Risk** | Risk score, category, and finding review across skills and candidates. |
 | **Config** | Scan scope, security level, and platform settings. |
 | **Logs** | Scan lifecycle events, warnings, and filesystem errors. |
 
@@ -144,6 +145,7 @@ Skill_Risk_Manager/
 │           ├── scan.py
 │           ├── skills.py
 │           ├── candidates.py
+│           ├── risk.py
 │           ├── config.py
 │           └── logs.py
 │
@@ -161,6 +163,15 @@ Skill_Risk_Manager/
 │   ├── logs/
 │   ├── platform/
 │   └── storage/
+│
+├── risk_manager/
+│   ├── engine.py
+│   ├── extractors.py
+│   ├── models.py
+│   ├── policy.py
+│   ├── reporter.py
+│   ├── rules.py
+│   └── presets/
 │
 ├── tests/
 ├── requirements.txt
@@ -186,6 +197,13 @@ skill_manager.backend.ScanService
       │
       ├── Stage1Scanner      → stable foreground snapshot
       └── ShadowScanner      → staged continuation candidates
+      │
+      ▼
+risk_manager.attach_risk
+      │
+      ├── Extract record metadata and body text
+      ├── Apply deterministic risk rules
+      └── Store results in SkillRecord.metadata["risk"]
       │
       ▼
 Local repository storage
@@ -284,7 +302,7 @@ python -B -m unittest discover -v
 Optional syntax check:
 
 ```powershell
-python -B -m compileall -q manager_GUI skill_manager tests
+python -B -m compileall -q manager_GUI risk_manager skill_manager tests
 ```
 
 ---
@@ -299,6 +317,11 @@ Implemented behavior includes:
 - thread-safe event queue polling,
 - stable snapshot loading,
 - staged candidate loading,
+- deterministic risk scoring on confirmed skills and staged candidates,
+- risk columns in Skills and Candidates,
+- dedicated Risk page with search, level/category filters, and CSV export,
+- shared page header, page toolbar, table, and detail-panel layout,
+- dashboard risk summary counters,
 - scan progress aggregation,
 - foreground-to-continuation transition,
 - candidate staging during shadow scanning,
@@ -327,12 +350,6 @@ Implemented behavior includes:
 - **Review before trust** — uncertain findings remain staged until explicitly promoted.
 - **Platform aware** — isolate OS-specific behavior behind adapters.
 - **UI-safe scanning** — keep long-running scan work off the Tkinter UI thread.
-
----
-
-## License
-
-Add your project license here.
 
 ---
 

@@ -40,6 +40,7 @@ from manager_GUI.core.record_mapping import (
 )
 from manager_GUI.core.state import AppState
 from manager_GUI.models import CandidateRecord
+from risk_manager.policy import preset_for_security_level
 from skill_manager.backend import ScanService
 from skill_manager.backend.models import CancelToken, ScanConfig, ScanEvent as BackendScanEvent
 from skill_manager.platform import get_platform_adapter
@@ -169,6 +170,55 @@ class BackendController:
         self._state.add_log("success", f"Exported logs: {target_path}")
         return target_path
 
+    def export_skills(self, output_path: Path | None = None) -> Path:
+        target_path = output_path or (
+            self.repository.logs_dir / f"manager_gui_skills_{time.strftime('%Y%m%d_%H%M%S')}.csv"
+        )
+        target_path.parent.mkdir(parents=True, exist_ok=True)
+        fieldnames = ["name", "type", "scope", "confidence", "risk_level", "risk_score", "path", "status"]
+        with target_path.open("w", encoding="utf-8", newline="") as csv_file:
+            writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+            writer.writeheader()
+            for record in self._state.confirmed_skills:
+                writer.writerow(
+                    {
+                        "name": record.name,
+                        "type": record.record_type,
+                        "scope": record.scope,
+                        "confidence": f"{record.confidence:.2f}",
+                        "risk_level": record.risk_level,
+                        "risk_score": record.risk_score,
+                        "path": record.path,
+                        "status": record.status,
+                    }
+                )
+        self._state.add_log("success", f"Exported skills: {target_path}")
+        return target_path
+
+    def export_risk_report(self, output_path: Path | None = None) -> Path:
+        target_path = output_path or (
+            self.repository.logs_dir / f"manager_gui_risk_report_{time.strftime('%Y%m%d_%H%M%S')}.csv"
+        )
+        target_path.parent.mkdir(parents=True, exist_ok=True)
+        fieldnames = ["record", "score", "level", "categories", "finding", "path", "source"]
+        with target_path.open("w", encoding="utf-8", newline="") as csv_file:
+            writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+            writer.writeheader()
+            for record, source in self._risk_records():
+                writer.writerow(
+                    {
+                        "record": getattr(record, "name", "") or Path(getattr(record, "path", "")).stem,
+                        "score": getattr(record, "risk_score", 0),
+                        "level": getattr(record, "risk_level", "low"),
+                        "categories": ", ".join(getattr(record, "risk_categories", ())),
+                        "finding": getattr(record, "top_finding", "") or getattr(record, "risk_summary", ""),
+                        "path": getattr(record, "path", ""),
+                        "source": source,
+                    }
+                )
+        self._state.add_log("success", f"Exported risk report: {target_path}")
+        return target_path
+
     def open_logs_folder(self) -> None:
         if not self.repository.logs_dir.exists():
             self._state.add_log("warning", f"Logs folder does not exist: {self.repository.logs_dir}")
@@ -179,6 +229,9 @@ class BackendController:
             self._state.add_log("error", f"Could not open logs folder: {error}")
             return
         self._state.add_log("success", f"Opened logs folder: {self.repository.logs_dir}")
+
+    def save_config(self) -> None:
+        self._state.add_log("info", "Config save is not required in this prototype.")
 
     def poll_events(
         self,
@@ -215,6 +268,13 @@ class BackendController:
     def get_state(self) -> AppState:
         return copy.copy(self._state)
 
+    def _risk_records(self) -> list[tuple[object, str]]:
+        return [
+            *[(record, "skills") for record in self._state.confirmed_skills],
+            *[(record, "snapshot") for record in self._state.candidates_snapshot],
+            *[(record, "staged") for record in self._state.candidates_staged],
+        ]
+
     @property
     def is_running(self) -> bool:
         return self._worker is not None and self._worker.is_alive()
@@ -225,7 +285,9 @@ class BackendController:
             security_level = self._state.security_level
             if scope:
                 previous_respect_hard_ignores = self.service.config.respect_hard_ignores
+                previous_risk_preset = self.service.config.risk_preset
                 self.service.config.respect_hard_ignores = security_level != "advanced"
+                self.service.config.risk_preset = preset_for_security_level(security_level)
                 try:
                     foreground_result = self.service.run_pipeline(
                         scope,
@@ -236,6 +298,7 @@ class BackendController:
                     )
                 finally:
                     self.service.config.respect_hard_ignores = previous_respect_hard_ignores
+                    self.service.config.risk_preset = previous_risk_preset
             else:
                 foreground_result = self.service.run_computer_scan(
                     security_level=security_level,

@@ -16,6 +16,7 @@ from skill_manager.backend.shadow_scanner import ShadowScanner
 from skill_manager.backend.stage1_scanner import Stage1Scanner
 from skill_manager.platform.base import PlatformAdapter
 from skill_manager.storage.repository import Repository
+from risk_manager.policy import preset_for_security_level
 
 
 class ScanService:
@@ -74,7 +75,9 @@ class ScanService:
         shadow_cancel_token: CancelToken | None = None,
     ) -> ForegroundScanResult | None:
         previous_respect_hard_ignores = self.config.respect_hard_ignores
+        previous_risk_preset = self.config.risk_preset
         self.config.respect_hard_ignores = security_level != "advanced"
+        self.config.risk_preset = preset_for_security_level(security_level)
         try:
             foreground_result = self.run_foreground(
                 self.build_computer_scan_targets(security_level),
@@ -82,13 +85,17 @@ class ScanService:
             )
         finally:
             self.config.respect_hard_ignores = previous_respect_hard_ignores
+            self.config.risk_preset = previous_risk_preset
         if foreground_result and not (fast_cancel_token and fast_cancel_token.cancelled):
             previous_respect_hard_ignores = self.config.respect_hard_ignores
+            previous_risk_preset = self.config.risk_preset
             self.config.respect_hard_ignores = security_level != "advanced"
+            self.config.risk_preset = preset_for_security_level(security_level)
             try:
                 self.run_shadow(foreground_result.remaining_targets, shadow_cancel_token)
             finally:
                 self.config.respect_hard_ignores = previous_respect_hard_ignores
+                self.config.risk_preset = previous_risk_preset
         return foreground_result
 
     def run_shadow(

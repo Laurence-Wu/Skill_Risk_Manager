@@ -17,6 +17,8 @@ from skill_manager.backend.scanner_utils import (
 )
 from skill_manager.platform.base import PlatformAdapter
 from skill_manager.storage.repository import Repository
+from risk_manager.engine import attach_risk
+from risk_manager.policy import load_policy
 
 
 class ShadowScanner:
@@ -38,6 +40,7 @@ class ShadowScanner:
         self.started_at = 0.0
         self.visited_directories: set[str] = set()
         self.pending_shadow_saves = 0
+        self.risk_policy = load_policy(self.config.risk_preset)
 
     def run(self, targets: list[ScanTarget], cancel_token: CancelToken) -> list[SkillRecord]:
         self.started_at = time.time()
@@ -125,7 +128,7 @@ class ShadowScanner:
         if stat_matches_cache(path, cache_record):
             raw_cached_classification = cached_classification(cache_record)
             if raw_cached_classification:
-                record = SkillRecord.from_dict(raw_cached_classification)
+                record = attach_risk(SkillRecord.from_dict(raw_cached_classification), self.risk_policy)
                 shadow_records.append(record)
                 self._mark_found(record)
                 self._emit_progress(path)
@@ -135,7 +138,7 @@ class ShadowScanner:
             computed_hash = file_hash(path)
             raw_cached_classification = cached_classification(cache_record)
             if cache_record and computed_hash == cache_record.get("hash") and raw_cached_classification:
-                record = SkillRecord.from_dict(raw_cached_classification)
+                record = attach_risk(SkillRecord.from_dict(raw_cached_classification), self.risk_policy)
                 shadow_records.append(record)
                 self._mark_found(record)
                 cache[key] = build_cache_record(path, computed_hash, record)
@@ -158,6 +161,7 @@ class ShadowScanner:
                     file_hash=computed_hash,
                     metadata=classification.metadata,
                 )
+                record = attach_risk(record, self.risk_policy)
                 shadow_records.append(record)
                 self._mark_found(record)
                 self._save_shadow_pool_lazily(shadow_records)

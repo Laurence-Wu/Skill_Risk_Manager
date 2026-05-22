@@ -51,6 +51,102 @@ class BaseButton(BaseComponent, ctk.CTkButton):
         self.configure_state("default" if enabled else "disabled")
 
 
+class PageHeader(BaseComponent, ctk.CTkFrame):
+    def __init__(self, master, title: str, subtitle: str = "") -> None:
+        self._init_component()
+        super().__init__(master, fg_color="transparent")
+        self.grid_columnconfigure(0, weight=1)
+        ctk.CTkLabel(
+            self,
+            text=title,
+            font=self.theme.font("page_title"),
+            text_color=self.theme.color("text_primary"),
+            anchor="w",
+        ).grid(row=0, column=0, sticky="ew")
+        ctk.CTkLabel(
+            self,
+            text=subtitle,
+            font=self.theme.font("small"),
+            text_color=self.theme.color("text_muted"),
+            anchor="w",
+        ).grid(row=1, column=0, sticky="ew", pady=(2, 0))
+
+
+class PageToolbar(BaseComponent, ctk.CTkFrame):
+    def __init__(self, master) -> None:
+        self._init_component()
+        super().__init__(master, fg_color="transparent")
+        self.grid_columnconfigure(0, weight=1)
+        self.left = ctk.CTkFrame(self, fg_color="transparent")
+        self.left.grid(row=0, column=0, sticky="w")
+        self.right = ctk.CTkFrame(self, fg_color="transparent")
+        self.right.grid(row=0, column=1, sticky="e")
+
+    def clear(self) -> None:
+        for frame in [self.left, self.right]:
+            for child in frame.winfo_children():
+                child.destroy()
+
+
+class SearchBox(BaseComponent, ctk.CTkEntry):
+    def __init__(
+        self,
+        master,
+        *,
+        placeholder: str = "Search...",
+        command: Callable[[], None] | None = None,
+        width: int = 220,
+    ) -> None:
+        self._init_component()
+        super().__init__(
+            master,
+            width=width,
+            height=self.theme.spacing("button_height"),
+            placeholder_text=placeholder,
+            fg_color=self.theme.color("surface"),
+            border_color=self.theme.color("border"),
+            border_width=1,
+            text_color=self.theme.color("text_primary"),
+            placeholder_text_color=self.theme.color("text_faint"),
+            font=self.theme.font("small"),
+        )
+        if command:
+            self.bind("<KeyRelease>", lambda _event: command())
+
+    def value(self) -> str:
+        return self.get().strip()
+
+
+class FilterDropdown(BaseComponent, ctk.CTkOptionMenu):
+    def __init__(
+        self,
+        master,
+        values: list[str],
+        *,
+        selected: str | None = None,
+        command: Callable[[str], None] | None = None,
+        width: int = 130,
+    ) -> None:
+        self._init_component()
+        super().__init__(
+            master,
+            values=values,
+            command=command,
+            width=width,
+            height=self.theme.spacing("button_height"),
+            fg_color=self.theme.color("surface_raised"),
+            button_color=self.theme.color("surface_raised"),
+            button_hover_color=self.theme.color("surface_hover"),
+            dropdown_fg_color=self.theme.color("surface"),
+            dropdown_hover_color=self.theme.color("surface_hover"),
+            dropdown_text_color=self.theme.color("text_primary"),
+            text_color=self.theme.color("text_primary"),
+            font=self.theme.font("button"),
+            dropdown_font=self.theme.font("small"),
+        )
+        self.set(selected or values[0])
+
+
 class BaseCard(BaseComponent, ctk.CTkFrame):
     def __init__(
         self,
@@ -149,6 +245,14 @@ class StatusBadge(BaseComponent, ctk.CTkLabel):
         self.configure(text=text, **self.theme.badge_style(kind))
 
 
+class RiskBadge(StatusBadge):
+    def __init__(self, master, level: str = "low") -> None:
+        super().__init__(master, level.title(), _risk_badge_kind(level))
+
+    def set_level(self, level: str) -> None:
+        self.set_status(level.title(), _risk_badge_kind(level))
+
+
 class ProgressCard(BaseCard):
     def __init__(self, master, title: str = "Scan") -> None:
         super().__init__(master, title=title)
@@ -228,21 +332,98 @@ class BaseView(BaseComponent, ctk.CTkFrame):
         self.controller = controller
 
     def page_header(self, title: str, subtitle: str = "") -> None:
-        ctk.CTkLabel(
-            self,
-            text=title,
-            font=self.theme.font("page_title"),
+        PageHeader(self, title, subtitle).grid(
+            row=0,
+            column=0,
+            sticky="ew",
+            padx=self.theme.spacing("app_padding"),
+            pady=(16, 10),
+        )
+
+    def page_toolbar(self, row: int = 1) -> PageToolbar:
+        toolbar = PageToolbar(self)
+        toolbar.grid(
+            row=row,
+            column=0,
+            sticky="ew",
+            padx=self.theme.spacing("app_padding"),
+            pady=(0, self.theme.spacing("section_gap")),
+        )
+        return toolbar
+
+
+class DetailPanel(BaseCard):
+    def __init__(self, master, title: str = "Details") -> None:
+        super().__init__(master, title=title)
+        self.title_label = ctk.CTkLabel(
+            self.body,
+            text="No selection",
+            font=self.theme.font("section_title"),
             text_color=self.theme.color("text_primary"),
             anchor="w",
-        ).grid(row=0, column=0, sticky="ew", padx=self.theme.spacing("app_padding"), pady=(16, 2))
-        if subtitle:
-            ctk.CTkLabel(
-                self,
-                text=subtitle,
-                font=self.theme.font("small"),
-                text_color=self.theme.color("text_muted"),
-                anchor="w",
-            ).grid(row=1, column=0, sticky="ew", padx=self.theme.spacing("app_padding"), pady=(0, 10))
+        )
+        self.title_label.grid(row=0, column=0, sticky="ew")
+        self.textbox = ctk.CTkTextbox(
+            self.body,
+            height=220,
+            fg_color=self.theme.color("surface_raised"),
+            border_color=self.theme.color("border"),
+            border_width=1,
+            text_color=self.theme.color("text_secondary"),
+            font=self.theme.font("small"),
+            wrap="word",
+        )
+        self.textbox.grid(row=1, column=0, sticky="nsew", pady=(8, 10))
+        self.footer = ctk.CTkFrame(self.body, fg_color="transparent")
+        self.footer.grid(row=2, column=0, sticky="ew")
+        self.body.grid_rowconfigure(1, weight=1)
+        self.set_content("No selection", "Select a row to view details.", [])
+
+    def set_content(self, title: str, body: str, actions: list[tuple[str, Callable[[], None], str]] | None = None) -> None:
+        self.title_label.configure(text=title)
+        self.textbox.configure(state="normal")
+        self.textbox.delete("1.0", "end")
+        self.textbox.insert("1.0", body)
+        self.textbox.configure(state="disabled")
+        for child in self.footer.winfo_children():
+            child.destroy()
+        for index, (label, callback, variant) in enumerate(actions or []):
+            BaseButton(
+                self.footer,
+                label,
+                command=callback,
+                variant=variant,
+                width=max(78, len(label) * 7 + 24),
+            ).grid(row=0, column=index, padx=(0 if index == 0 else 6, 0), pady=(0, 2))
+
+
+class ConfirmDialog(BaseComponent, ctk.CTkToplevel):
+    def __init__(self, master, title: str, message: str, on_confirm: Callable[[], None]) -> None:
+        self._init_component()
+        super().__init__(master)
+        self.title(title)
+        self.geometry("360x160")
+        self.configure(fg_color=self.theme.color("app_bg"))
+        self.resizable(False, False)
+        self.grid_columnconfigure(0, weight=1)
+        ctk.CTkLabel(
+            self,
+            text=message,
+            font=self.theme.font("small"),
+            text_color=self.theme.color("text_secondary"),
+            wraplength=320,
+            justify="left",
+        ).grid(row=0, column=0, sticky="ew", padx=18, pady=(18, 14))
+        actions = ctk.CTkFrame(self, fg_color="transparent")
+        actions.grid(row=1, column=0, sticky="e", padx=18, pady=(0, 18))
+        BaseButton(actions, "Cancel", self.destroy, variant="secondary", width=84).grid(row=0, column=0, padx=(0, 8))
+        BaseButton(actions, "Confirm", lambda: self._confirm(on_confirm), variant="danger", width=92).grid(row=0, column=1)
+        self.transient(master)
+        self.grab_set()
+
+    def _confirm(self, on_confirm: Callable[[], None]) -> None:
+        on_confirm()
+        self.destroy()
 
 
 def status_kind(scan_status: str) -> str:
@@ -261,6 +442,16 @@ def _files_text(files_checked: int, expected_total_files: int) -> str:
     if expected_total_files:
         return f"{files_checked} / ~{max(expected_total_files, files_checked)}"
     return str(files_checked)
+
+
+def _risk_badge_kind(level: str) -> str:
+    return {
+        "critical": "error",
+        "high": "warning",
+        "medium": "staged",
+        "low": "valid",
+        "none": "ready",
+    }.get(level.lower(), "ready")
 
 
 def _truncate(value: str, max_length: int) -> str:

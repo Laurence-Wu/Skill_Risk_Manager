@@ -6,8 +6,10 @@ from pathlib import Path
 from unittest.mock import patch
 
 from skill_manager.backend import ScanService
+from skill_manager.backend.cache import file_hash
 from skill_manager.backend.fast_exit import FastExitTracker
-from skill_manager.backend.models import CancelToken, ScanConfig, ScanEvent, ScanTarget
+from skill_manager.backend.models import CancelToken, ScanConfig, ScanEvent, ScanTarget, SkillRecord
+from skill_manager.backend.scanner_utils import build_cache_record
 from skill_manager.backend.shadow_scanner import ShadowScanner
 from skill_manager.backend.stage1_scanner import Stage1Scanner
 from skill_manager.platform import get_platform_adapter
@@ -88,6 +90,59 @@ class ScannerTests(unittest.TestCase):
             self.assertIn("claude_config", record_types)
             self.assertTrue(repository.summary_path.exists())
             self.assertTrue(repository.scan_cache_path.exists())
+
+    def test_foreground_records_include_risk_metadata(self) -> None:
+        with writable_temp_dir() as root:
+            repository = Repository(root / "runtime")
+            adapter = get_platform_adapter()
+            skill_file = root / "claude" / "skills" / "deploy-helper" / "SKILL.md"
+            skill_file.parent.mkdir(parents=True)
+            skill_file.write_text(
+                "---\nname: Deploy Helper\ndescription: Uses shell\nallowed-tools:\n  - Bash\n---\nRun deploy.",
+                encoding="utf-8",
+            )
+            scanner = Stage1Scanner(
+                adapter,
+                repository,
+                ScanConfig(min_checked_count=1, min_elapsed_seconds=0, required_source_groups=set()),
+                queue.Queue[ScanEvent](),
+            )
+
+            scanner.run_foreground([ScanTarget(skill_file.parent.parent, 100, "personal_skill", 2, "foreground", "Skills")])
+
+            risk = repository.load_snapshot()[0].metadata["risk"]
+            self.assertEqual(risk["level"], "high")
+            self.assertIn("command_execution", risk["categories"])
+
+    def test_cached_foreground_records_are_rescored(self) -> None:
+        with writable_temp_dir() as root:
+            repository = Repository(root / "runtime")
+            adapter = get_platform_adapter()
+            skill_file = root / "claude" / "skills" / "cleanup" / "SKILL.md"
+            skill_file.parent.mkdir(parents=True)
+            skill_file.write_text("---\nname: Cleanup\ndescription: Run rm -rf old files\n---", encoding="utf-8")
+            cached_record = SkillRecord(
+                name="Cleanup",
+                record_type="personal_skill",
+                scope="personal",
+                path=skill_file,
+                source_type="personal_skill",
+                confidence=0.99,
+                last_modified=skill_file.stat().st_mtime,
+                metadata={"description": "Run rm -rf old files"},
+            )
+            repository.save_cache({adapter.path_key(skill_file): build_cache_record(skill_file, file_hash(skill_file), cached_record)})
+            scanner = Stage1Scanner(
+                adapter,
+                repository,
+                ScanConfig(min_checked_count=1, min_elapsed_seconds=0, required_source_groups=set()),
+                queue.Queue[ScanEvent](),
+            )
+
+            scanner.run_foreground([ScanTarget(skill_file, 100, "personal_skill", 0, "foreground", "Cached")])
+
+            risk = repository.load_snapshot()[0].metadata["risk"]
+            self.assertEqual(risk["level"], "critical")
 
     def test_foreground_cancel_before_work_does_not_save_snapshot(self) -> None:
         with writable_temp_dir() as root:
@@ -460,6 +515,29 @@ class ScannerTests(unittest.TestCase):
             self.assertEqual(before_snapshot, after_snapshot)
             self.assertEqual(len(shadow_records), 1)
             self.assertEqual(shadow_records[0].record_type, "candidate")
+
+    def test_shadow_scan_staged_candidates_include_risk(self) -> None:
+        with writable_temp_dir() as root:
+            repository = Repository(root / "runtime")
+            adapter = get_platform_adapter()
+            shadow_file = root / "project" / "prompts" / "helper.md"
+            shadow_file.parent.mkdir(parents=True)
+            shadow_file.write_text(
+                "---\nname: Helper\ndescription: Candidate\nallowed-tools:\n  - Bash\n---",
+                encoding="utf-8",
+            )
+            scanner = ShadowScanner(
+                adapter,
+                repository,
+                ScanConfig(shadow_batch_size=1),
+                queue.Queue[ScanEvent](),
+            )
+
+            scanner.run([ScanTarget(shadow_file.parent, 30, "deferred_candidate", 1, "shadow", "Shadow")], CancelToken())
+
+            record = repository.load_shadow_pool()[0]
+            self.assertEqual(record.status, "needs_review")
+            self.assertEqual(record.metadata["risk"]["level"], "critical")
 
     def test_shadow_scan_respects_candidate_budget(self) -> None:
         with writable_temp_dir() as root:
